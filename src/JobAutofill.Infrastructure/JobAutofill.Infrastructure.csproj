@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>JobAutofill.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JobAutofill.Core/JobAutofill.Core.csproj" />
+    <ProjectReference Include="../JobAutofill.Domain/JobAutofill.Domain.csproj" />
+  </ItemGroup>
+</Project>

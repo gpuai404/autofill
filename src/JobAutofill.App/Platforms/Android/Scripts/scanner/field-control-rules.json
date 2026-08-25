@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 3,
+  "fieldSelectors": [
+    "input:not([type=\"hidden\"]):not([type=\"submit\"]):not([type=\"button\"]):not([type=\"reset\"]):not([type=\"image\"]):not([id*=\"recaptcha\"]):not([name*=\"recaptcha\"]):not([id*=\"hcaptcha\"]):not([name*=\"hcaptcha\"])",
+    "textarea:not([id*=\"recaptcha\"]):not([name*=\"recaptcha\"]):not([id*=\"hcaptcha\"]):not([name*=\"hcaptcha\"])",
+    "select",
+    "button[role=\"combobox\"]",
+    "[role=\"combobox\"]",
+    "[role=\"radiogroup\"]",
+    "[role=\"group\"] input[type=\"radio\"]",
+    "[role=\"textbox\"]",
+    "[role=\"searchbox\"]",
+    "[contenteditable=\"true\"]",
+    "[contenteditable=\"\"]",
+    "[aria-haspopup=\"listbox\"]",
+    "[aria-haspopup=\"grid\"]"
+  ],
+  "controlTypes": [
+    { "controlType": "select", "family": "choice", "reason": "Native select element.", "requiresCapturedOption": true, "valuePolicy": "mustMatchCapturedOption", "fillStrategy": "setNativeSelectValue", "optionSourceGroup": "select", "any": [{ "tagName": "select" }] },
+    { "controlType": "combobox", "family": "choice", "reason": "ARIA combobox role.", "requiresCapturedOption": true, "valuePolicy": "mustMatchCapturedOptionUnlessEditableFreeText", "fillStrategy": "openPopupThenSelectCapturedOption", "optionSourceGroup": "combobox", "extractionActionGroup": "comboboxPopup", "any": [{ "role": "combobox" }] },
+    { "controlType": "combobox", "family": "choice", "reason": "Element opens a listbox popup.", "requiresCapturedOption": true, "valuePolicy": "mustMatchCapturedOptionUnlessEditableFreeText", "fillStrategy": "openPopupThenSelectCapturedOption", "optionSourceGroup": "combobox", "extractionActionGroup": "comboboxPopup", "any": [{ "ariaHasPopup": "listbox" }] },
+    { "controlType": "gridCombobox", "family": "choice", "reason": "Combobox opens a grid popup.", "requiresCapturedOption": true, "valuePolicy": "mustMatchCapturedOption", "fillStrategy": "openPopupThenSelectCapturedOption", "optionSourceGroup": "gridCombobox", "extractionActionGroup": "comboboxPopup", "any": [{ "ariaHasPopup": "grid" }] },
+    { "controlType": "radio", "family": "choice", "reason": "Native radio input.", "requiresCapturedOption": true, "valuePolicy": "mustMatchCapturedOption", "fillStrategy": "clickMatchingRadio", "optionSourceGroup": "radio", "any": [{ "nativeType": "radio" }] },
+    { "controlType": "groupContainer", "family": "container", "reason": "Structural grouping element. Descendant fields are the real targets.", "requiresCapturedOption": false, "valuePolicy": "notApplicable", "fillStrategy": "skip", "any": [{ "role": "radiogroup" }, { "role": "group" }] },
+    { "controlType": "checkboxBoolean", "family": "boolean", "reason": "Standalone native checkbox input.", "valuePolicy": "boolean", "fillStrategy": "setChecked", "acceptedValues": ["true", "false", "yes", "no", "1", "0", "on", "off"], "any": [{ "nativeType": "checkbox" }] },
+    { "controlType": "file", "family": "file", "reason": "Native file input.", "valuePolicy": "manualReview", "fillStrategy": "unsupportedInPageJavaScript", "requiresReview": true, "any": [{ "nativeType": "file" }] },
+    { "controlType": "textarea", "family": "text", "reason": "Native textarea element.", "valuePolicy": "freeText", "fillStrategy": "setNativeValue", "any": [{ "tagName": "textarea" }] },
+    { "controlType": "richText", "family": "text", "reason": "contenteditable rich-text field.", "valuePolicy": "freeText", "fillStrategy": "setContentEditableText", "any": [{ "isContentEditable": true }] },
+    { "controlType": "richText", "family": "text", "reason": "ARIA textbox backed by editable DOM content.", "valuePolicy": "freeText", "fillStrategy": "setContentEditableText", "any": [{ "role": "textbox", "isContentEditable": true }, { "role": "searchbox", "isContentEditable": true }] },
+    { "controlType": "email", "family": "text", "reason": "Native email input.", "valuePolicy": "freeText", "format": "email", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "email" }] },
+    { "controlType": "phone", "family": "text", "reason": "Native telephone input.", "valuePolicy": "freeText", "format": "phone", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "tel" }] },
+    { "controlType": "url", "family": "text", "reason": "Native URL input.", "valuePolicy": "freeText", "format": "url", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "url" }] },
+    { "controlType": "number", "family": "number", "reason": "Native numeric input.", "valuePolicy": "freeText", "format": "number", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "number" }] },
+    { "controlType": "date", "family": "date", "reason": "Native date-like input.", "valuePolicy": "freeText", "format": "date", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "date" }, { "nativeType": "datetime-local" }, { "nativeType": "month" }, { "nativeType": "week" }, { "nativeType": "time" }] },
+    { "controlType": "password", "family": "sensitiveText", "reason": "Native password input.", "valuePolicy": "manualReview", "fillStrategy": "skip", "requiresReview": true, "any": [{ "nativeType": "password" }] },
+    { "controlType": "search", "family": "text", "reason": "Native search input.", "valuePolicy": "freeText", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "search" }] },
+    { "controlType": "color", "family": "text", "reason": "Native color input.", "valuePolicy": "freeText", "format": "hexColor", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "color" }] },
+    { "controlType": "range", "family": "number", "reason": "Native range input.", "valuePolicy": "freeText", "format": "number", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "range" }] },
+    { "controlType": "text", "family": "text", "reason": "Native text-compatible input.", "valuePolicy": "freeText", "fillStrategy": "setNativeValue", "any": [{ "nativeType": "text" }, { "nativeType": "" }] }
+  ],
+  "fallback": { "controlType": "text", "family": "text", "reason": "Fallback for text-compatible fields.", "valuePolicy": "freeText", "fillStrategy": "setNativeValue" },
+  "optionSources": {
+    "select": [{ "source": "nativeSelect", "reason": "Options read from native select element.", "requiresAction": false }],
+    "radio": [{ "source": "radioGroup", "reason": "Options read from radio inputs with the same name.", "requiresAction": false }],
+    "checkboxGroup": [{ "source": "checkboxGroup", "reason": "Options read from checkbox inputs under one question.", "requiresAction": false }],
+    "combobox": [
+      { "source": "ariaControlledListbox", "reason": "Options read from the popup referenced by aria-controls or aria-owns.", "requiresAction": false },
+      { "source": "datalist", "reason": "Options read from the input datalist.", "requiresAction": false },
+      { "source": "visibleListbox", "reason": "Options read from visible listbox options in the current DOM.", "requiresAction": false },
+      { "source": "activePopupListbox", "reason": "Open the combobox, then read visible listbox options.", "requiresAction": true, "actionGroup": "comboboxPopup" }
+    ],
+    "gridCombobox": [
+      { "source": "ariaControlledGrid", "reason": "Options read from rows or cells in a controlled grid popup.", "requiresAction": false },
+      { "source": "activePopupGrid", "reason": "Open the combobox, then read visible grid rows or cells.", "requiresAction": true, "actionGroup": "comboboxPopup" }
+    ]
+  },
+  "selectionModes": [
+    { "selectionMode": "multiple", "reason": "Native or ARIA multi-select field.", "any": [{ "multiple": true }, { "ariaMultiselectable": true }] },
+    { "selectionMode": "multiple", "reason": "Question text asks for all applicable answers.", "any": [{ "labelContains": "mark all that apply" }, { "labelContains": "select all that apply" }, { "labelContains": "choose all that apply" }, { "labelContains": "all that apply" }, { "labelContains": "select any" }, { "labelContains": "choose any" }, { "labelContains": "check any" }, { "labelContains": "one or more" }, { "labelContains": "multiple answers" }, { "labelContains": "multiple selections" }, { "labelContains": "any of the following" }] },
+    { "selectionMode": "multiple", "reason": "Checkbox category questions with several independent options usually allow more than one answer.", "any": [{ "labelContains": "skills" }, { "labelContains": "languages" }, { "labelContains": "certifications" }, { "labelContains": "licenses" }, { "labelContains": "countries" }, { "labelContains": "locations" }, { "labelContains": "schools" }, { "labelContains": "degrees" }] },
+    { "selectionMode": "single", "reason": "Question text or options describe a mutually exclusive checkbox answer set.", "any": [{ "labelContains": "choose one" }, { "labelContains": "select one" }, { "labelContains": "only one" }, { "labelContains": "best describes" }, { "labelContains": "identify as" }, { "labelContains": "yes or no" }, { "labelContains": "authorized" }, { "labelContains": "sponsorship" }, { "labelContains": "visa" }, { "labelContains": "willing" }, { "labelContains": "agree" }, { "labelContains": "consent" }, { "labelContains": "confirm" }, { "labelContains": "acknowledge" }, { "labelContains": "gender" }, { "labelContains": "race" }, { "labelContains": "ethnicity" }, { "labelContains": "veteran status" }, { "labelContains": "disability status" }] },
+    { "selectionMode": "single", "reason": "Choice field defaults to one selected answer unless scan evidence clearly allows multiple answers.", "any": [{ "controlFamily": "choice" }] }
+  ],
+  "extractionActions": {
+    "comboboxPopup": [
+      { "action": "focus", "reason": "Some editable comboboxes show suggestions on focus." },
+      { "action": "pointerdown", "reason": "Pointer-driven component libraries often open popups before mouse events fire." },
+      { "action": "mousedown", "reason": "React-style select controls often open their popup from mouse down before click." },
+      { "action": "pointerup", "reason": "Completes the pointer gesture for controls that wait for a full press sequence." },
+      { "action": "mouseup", "reason": "Completes the mouse gesture for controls that wait for a full click sequence." },
+      { "action": "click", "reason": "Select-only comboboxes and adjacent picker controls often open by click." },
+      { "action": "keydown", "key": "ArrowDown", "reason": "ARIA combobox patterns commonly open or move into the popup with Down Arrow." }
+    ]
+  },
+  "sensitiveFieldDetection": {
+    "matchAgainst": ["label", "placeholder"],
+    "matchType": "caseInsensitiveSubstring",
+    "categories": [
+      { "subCategory": "raceEthnicity", "keywords": ["race", "ethnicity"] },
+      { "subCategory": "hispanicLatino", "keywords": ["hispanic", "latino", "hispanic or latino"] },
+      { "subCategory": "genderIdentity", "keywords": ["gender", "gender identity"] },
+      { "subCategory": "pronouns", "keywords": ["pronoun", "pronouns"] },
+      { "subCategory": "sexAssignedAtBirth", "keywords": ["sex assigned at birth"] },
+      { "subCategory": "veteranStatus", "keywords": ["veteran status", "protected veteran"] },
+      { "subCategory": "disabilityStatus", "keywords": ["disability", "disability status"] },
+      { "subCategory": "sexualOrientation", "keywords": ["sexual orientation"] }
+    ],
+    "resultFieldCategory": "sensitive"
+  }
+}

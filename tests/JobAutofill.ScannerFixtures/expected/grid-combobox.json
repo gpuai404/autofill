@@ -1,0 +1,13 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    { "labelIncludes": "Department", "controlType": "gridCombobox", "minOptions": 3, "requiresCapturedOption": true }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "Department", "controlType": "gridCombobox" },
+      "optionLabelIncludes": "Engineering",
+      "ok": true
+    }
+  ]
+}

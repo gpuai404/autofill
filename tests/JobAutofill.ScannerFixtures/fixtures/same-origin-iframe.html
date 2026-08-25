@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <iframe id="applicationFrame" title="Application form"></iframe>
+  <script>
+    const frame = document.getElementById('applicationFrame');
+    frame.srcdoc = `
+      <!doctype html>
+      <html lang="en">
+      <body>
+        <form>
+          <label for="phone">Phone number</label>
+          <input id="phone" type="tel" name="phone">
+        </form>
+      </body>
+      </html>
+    `;
+  </script>
+</body>
+</html>

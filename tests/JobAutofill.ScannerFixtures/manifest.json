@@ -1,0 +1,62 @@
+[
+  {
+    "name": "baseline-controls",
+    "fixture": "fixtures/baseline-controls.html",
+    "expected": "expected/baseline-controls.json"
+  },
+  {
+    "name": "required-radio-question",
+    "fixture": "fixtures/required-radio-question.html",
+    "expected": "expected/required-radio-question.json"
+  },
+  {
+    "name": "hidden-radio-group",
+    "fixture": "fixtures/hidden-radio-group.html",
+    "expected": "expected/hidden-radio-group.json"
+  },
+  {
+    "name": "popup-combobox",
+    "fixture": "fixtures/popup-combobox.html",
+    "expected": "expected/popup-combobox.json"
+  },
+  {
+    "name": "searchable-combobox",
+    "fixture": "fixtures/searchable-combobox.html",
+    "expected": "expected/searchable-combobox.json"
+  },
+  {
+    "name": "required-searchable-combobox",
+    "fixture": "fixtures/required-searchable-combobox.html",
+    "expected": "expected/required-searchable-combobox.json"
+  },
+  {
+    "name": "autocomplete-no-position-fallback",
+    "fixture": "fixtures/autocomplete-no-position-fallback.html",
+    "expected": "expected/autocomplete-no-position-fallback.json"
+  },
+  {
+    "name": "action-buttons",
+    "fixture": "fixtures/action-buttons.html",
+    "expected": "expected/action-buttons.json"
+  },
+  {
+    "name": "spl-searchable-combobox",
+    "fixture": "fixtures/spl-searchable-combobox.html",
+    "expected": "expected/spl-searchable-combobox.json"
+  },
+  {
+    "name": "grid-combobox",
+    "fixture": "fixtures/grid-combobox.html",
+    "expected": "expected/grid-combobox.json"
+  },
+  {
+    "name": "open-shadow",
+    "fixture": "fixtures/open-shadow.html",
+    "expected": "expected/open-shadow.json"
+  },
+  {
+    "name": "same-origin-iframe",
+    "fixture": "fixtures/same-origin-iframe.html",
+    "expected": "expected/same-origin-iframe.json"
+  }
+]

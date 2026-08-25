@@ -1,0 +1,20 @@
+{
+  "minFieldCount": 2,
+  "fields": [
+    {
+      "labelIncludes": "immigration sponsorship",
+      "controlType": "radioGroup",
+      "controlFamily": "choice",
+      "minOptions": 2,
+      "requiresCapturedOption": true,
+      "required": "true"
+    },
+    {
+      "labelIncludes": "authorized to work",
+      "controlType": "radioGroup",
+      "controlFamily": "choice",
+      "minOptions": 2,
+      "requiresCapturedOption": true
+    }
+  ]
+}

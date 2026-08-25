@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JobAutofill.App.Pages.JobBrowserPage"
+             Title="Autofill"
+             Shell.NavBarIsVisible="True">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="ScanToolbarItem"
+                     Text="Scan"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnScanClicked"
+                     IsEnabled="True" />
+        <ToolbarItem x:Name="FillToolbarItem"
+                     Text="Fill"
+                     Order="Primary"
+                     Priority="1"
+                     Clicked="OnFillClicked"
+                     IsEnabled="False" />
+        <ToolbarItem x:Name="DebugToolbarItem"
+                     Text="Debug"
+                     Order="Secondary"
+                     Priority="2"
+                     Clicked="OnDebugClicked"
+                     IsEnabled="False" />
+    </ContentPage.ToolbarItems>
+
+    <Grid BackgroundColor="#F6F8FA">
+        <WebView x:Name="JobWebView"
+                 Source="{Binding WebSource}"
+                 Navigated="OnWebViewNavigated"
+                 Navigating="OnWebViewNavigating" />
+
+        <Border x:Name="BottomSheet"
+                Margin="0"
+                Padding="14,8,14,14"
+                HeightRequest="104"
+                VerticalOptions="End"
+                Stroke="#D8DEE4"
+                StrokeThickness="1"
+                BackgroundColor="#FFFFFF">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="18" />
+            </Border.StrokeShape>
+            <Border.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnBottomSheetPanUpdated" />
+                <TapGestureRecognizer Tapped="OnBottomSheetTapped" />
+            </Border.GestureRecognizers>
+
+            <Grid RowDefinitions="Auto,*,Auto"
+                  RowSpacing="10">
+                <BoxView HeightRequest="4"
+                         WidthRequest="44"
+                         CornerRadius="2"
+                         Color="#D0D7DE"
+                         HorizontalOptions="Center" />
+
+                <Grid x:Name="DetectedFieldsPanel"
+                      Grid.Row="1"
+                      RowDefinitions="Auto,*"
+                      RowSpacing="6">
+                    <Label Text="Detected fields"
+                           FontAttributes="Bold"
+                           FontSize="13"
+                           TextColor="#24292F" />
+                    <CollectionView x:Name="DetectedFieldsView"
+                                    Grid.Row="1"
+                                    ItemsSource="{Binding DetectedFields}">
+                        <CollectionView.EmptyView>
+                            <Label Text="Scan opens detected fields here."
+                                   TextColor="#666666"
+                                   FontSize="12" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="0,6"
+                                      ColumnDefinitions="*,Auto"
+                                      RowDefinitions="Auto"
+                                      ColumnSpacing="12"
+                                      RowSpacing="0">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnDetectedFieldTapped"
+                                                              CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Label}"
+                                               FontAttributes="Bold"
+                                               FontSize="13"
+                                               LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding FillPreview}"
+                                               FontSize="12"
+                                               TextColor="#0969DA"
+                                               LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding OptionsSummary}"
+                                               FontSize="11"
+                                               TextColor="#57606A"
+                                               IsVisible="{Binding ShouldShowOptionsSummary}"
+                                               LineBreakMode="TailTruncation" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Spacing="4"
+                                                         VerticalOptions="Center">
+                                        <Label Text="{Binding InputType}"
+                                               FontSize="12"
+                                               HorizontalTextAlignment="End"
+                                               TextColor="#57606A" />
+                                        <Button Text="{Binding ApprovalActionText}"
+                                                Clicked="OnApproveFieldClicked"
+                                                IsVisible="{Binding CanApprove}"
+                                                Padding="10,4"
+                                                FontSize="12"
+                                                CornerRadius="6"
+                                                BorderWidth="1"
+                                                BorderColor="#0969DA"
+                                                BackgroundColor="#FFFFFF"
+                                                TextColor="#0969DA"
+                                                CommandParameter="{Binding .}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+
+                <Grid Grid.Row="2"
+                      RowDefinitions="Auto,Auto,Auto"
+                      RowSpacing="2"
+                      Padding="0,4,0,0">
+                    <Label x:Name="StatusLabel"
+                           FontSize="12"
+                           TextColor="#57606A"
+                           LineBreakMode="TailTruncation"
+                           Text="{Binding StatusLabel}" />
+                    <Label x:Name="JobTitleLabel"
+                           Grid.Row="1"
+                           FontAttributes="Bold"
+                           FontSize="14"
+                           LineBreakMode="TailTruncation"
+                           Text="{Binding JobTitle}" />
+                    <Label x:Name="JobUrlLabel"
+                           Grid.Row="2"
+                           FontSize="12"
+                           TextColor="#666666"
+                           LineBreakMode="TailTruncation"
+                           Text="{Binding JobUrl}" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

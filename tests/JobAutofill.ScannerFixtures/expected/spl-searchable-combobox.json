@@ -1,0 +1,6 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    { "labelIncludes": "major", "controlType": "combobox", "requiresCapturedOption": true }
+  ]
+}

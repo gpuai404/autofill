@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <label id="majorLabel">What is your major?</label>
+    <spl-autocomplete id="majorHost"></spl-autocomplete>
+  </form>
+  <script>
+    customElements.define('spl-autocomplete', class extends HTMLElement {
+      connectedCallback() {
+        if (this.shadowRoot) return;
+
+        const root = this.attachShadow({ mode: 'open' });
+        root.innerHTML = `
+          <div class="c-spl-input-wrapper">
+            <input
+              id="question_major"
+              class="c-spl-input c-spl-multiselect-autocomplete-input"
+              role="combobox"
+              aria-labelledby="majorLabel"
+              aria-haspopup="listbox"
+              aria-controls="menu-question_major"
+              aria-expanded="false"
+              aria-autocomplete="list"
+              autocomplete="off">
+          </div>
+          <div id="menu-question_major" class="c-spl-dropdown c-spl-autocomplete" hidden></div>
+        `;
+
+        const input = root.getElementById('question_major');
+        const menu = root.getElementById('menu-question_major');
+        const options = [
+          'Computer Engineering',
+          'Computer Science',
+          'Software Engineering',
+          'Electrical Engineering'
+        ];
+
+        function render() {
+          const query = input.value.trim().toLowerCase();
+          menu.innerHTML = '';
+          if (!query) {
+            menu.hidden = true;
+            input.setAttribute('aria-expanded', 'false');
+            return;
+          }
+
+          options
+            .filter(option => option.toLowerCase().includes(query))
+            .forEach(option => {
+              const item = document.createElement('spl-dropdown-option');
+              item.className = 'c-spl-dropdown-option';
+              item.setAttribute('data-value', option);
+              item.textContent = option;
+              menu.appendChild(item);
+            });
+
+          menu.hidden = menu.children.length === 0;
+          input.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+        }
+
+        input.addEventListener('focus', render);
+        input.addEventListener('input', render);
+        input.addEventListener('change', render);
+        menu.addEventListener('click', event => {
+          const option = event.target.closest('spl-dropdown-option, .c-spl-dropdown-option');
+          if (!option) return;
+          input.value = option.textContent.trim();
+          menu.hidden = true;
+          input.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

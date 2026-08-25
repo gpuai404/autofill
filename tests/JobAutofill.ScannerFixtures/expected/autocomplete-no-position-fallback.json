@@ -1,0 +1,19 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    {
+      "labelIncludes": "Gender",
+      "controlType": "combobox",
+      "requiresCapturedOption": true
+    }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "Gender", "controlType": "combobox" },
+      "value": "Prefer not to answer",
+      "ok": false,
+      "elementSelector": "#gender",
+      "elementValueIsNot": "Female"
+    }
+  ]
+}

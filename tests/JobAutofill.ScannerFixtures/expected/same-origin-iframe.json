@@ -1,0 +1,13 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    { "labelIncludes": "Phone number", "controlType": "phone", "selectorIncludes": "@frame", "controlFamily": "text" }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "Phone number", "controlType": "phone" },
+      "value": "+3225550101",
+      "ok": true
+    }
+  ]
+}

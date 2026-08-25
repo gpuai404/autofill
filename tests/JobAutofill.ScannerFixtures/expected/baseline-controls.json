@@ -1,0 +1,28 @@
+{
+  "minFieldCount": 6,
+  "fields": [
+    { "labelIncludes": "First name", "controlType": "text", "controlFamily": "text" },
+    { "labelIncludes": "Email", "controlType": "email", "controlFamily": "text" },
+    { "labelIncludes": "Country", "controlType": "select", "minOptions": 2, "requiresCapturedOption": true },
+    { "labelIncludes": "authorized", "controlType": "radio", "minOptions": 2, "requiresCapturedOption": true },
+    { "labelIncludes": "relocate", "controlType": "checkboxBoolean", "controlFamily": "boolean" },
+    { "labelIncludes": "Resume", "controlType": "file", "controlFamily": "file" }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "First name", "controlType": "text" },
+      "value": "Ada",
+      "ok": true
+    },
+    {
+      "field": { "labelIncludes": "Country", "controlType": "select" },
+      "optionLabelIncludes": "Belgium",
+      "ok": true
+    },
+    {
+      "field": { "labelIncludes": "Resume", "controlType": "file" },
+      "value": "/tmp/resume.pdf",
+      "ok": false
+    }
+  ]
+}

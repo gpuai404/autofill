@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <shadow-question id="shadowHost"></shadow-question>
+  </form>
+  <script>
+    customElements.define('shadow-question', class extends HTMLElement {
+      connectedCallback() {
+        if (this.shadowRoot) return;
+        const root = this.attachShadow({ mode: 'open' });
+        root.innerHTML = `
+          <label for="portfolio">Portfolio URL</label>
+          <input id="portfolio" type="url" name="portfolio">
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

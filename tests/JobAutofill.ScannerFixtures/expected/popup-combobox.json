@@ -1,0 +1,13 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    { "labelIncludes": "City", "controlType": "combobox", "minOptions": 3, "requiresCapturedOption": true }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "City", "controlType": "combobox" },
+      "optionLabelIncludes": "Brussels",
+      "ok": true
+    }
+  ]
+}

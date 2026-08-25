@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JobAutofill.App.Views.JobsListPage"
+             Title="Jobs">
+    <Grid Padding="16"
+          RowDefinitions="Auto,*"
+          RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="10">
+            <Entry x:Name="CustomUrlEntry"
+                   Placeholder="Paste job URL" />
+            <Button Grid.Column="1"
+                    Text="Open"
+                    Clicked="OnOpenCustomUrlClicked" />
+        </Grid>
+
+        <CollectionView x:Name="JobsView"
+                        Grid.Row="1"
+                        SelectionMode="Single"
+                        SelectionChanged="OnJobSelected">
+            <CollectionView.EmptyView>
+                <Label Text="No jobs available."
+                       TextColor="#666666" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,8"
+                            Padding="12"
+                            Stroke="#D8DEE4"
+                            StrokeThickness="1"
+                            BackgroundColor="#FFFFFF">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                            <Grid RowDefinitions="Auto,Auto,Auto"
+                                  RowSpacing="4">
+                            <Label Text="{Binding Title}"
+                                   FontAttributes="Bold"
+                                   LineBreakMode="TailTruncation" />
+                            <Label Grid.Row="1"
+                                   Text="{Binding Company}"
+                                   TextColor="#444444"
+                                   LineBreakMode="TailTruncation" />
+                            <Grid Grid.Row="2">
+                                <Label Text="{Binding Location}"
+                                       FontSize="12"
+                                       TextColor="#666666"
+                                       LineBreakMode="TailTruncation" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

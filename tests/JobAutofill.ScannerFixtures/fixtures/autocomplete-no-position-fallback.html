@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <label id="genderLabel" for="gender">Gender</label>
+    <input
+      id="gender"
+      role="combobox"
+      aria-labelledby="genderLabel"
+      aria-haspopup="listbox"
+      aria-controls="genderOptions"
+      aria-expanded="false"
+      autocomplete="off">
+    <div id="genderOptions" role="listbox" hidden></div>
+  </form>
+  <script>
+    const input = document.getElementById('gender');
+    const list = document.getElementById('genderOptions');
+
+    function render() {
+      list.innerHTML = '';
+      ['Female', 'Male', 'Non-binary'].forEach(option => {
+        const item = document.createElement('div');
+        item.setAttribute('role', 'option');
+        item.setAttribute('data-value', option);
+        item.textContent = option;
+        list.appendChild(item);
+      });
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+    }
+
+    input.addEventListener('focus', render);
+    input.addEventListener('input', render);
+    input.addEventListener('mousedown', render);
+    input.addEventListener('click', render);
+    list.addEventListener('click', event => {
+      const option = event.target.closest('[role="option"]');
+      if (!option) return;
+      input.value = option.textContent.trim();
+      list.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+    });
+  </script>
+</body>
+</html>

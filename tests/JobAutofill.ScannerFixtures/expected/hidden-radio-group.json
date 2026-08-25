@@ -1,0 +1,19 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    {
+      "labelIncludes": "legally authorized",
+      "controlType": "radioGroup",
+      "controlFamily": "choice",
+      "minOptions": 2,
+      "requiresCapturedOption": true
+    }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "legally authorized", "controlType": "radioGroup" },
+      "optionLabelIncludes": "Yes",
+      "ok": true
+    }
+  ]
+}

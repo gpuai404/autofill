@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <label id="cityLabel" for="cityBox">City</label>
+    <input
+      id="cityBox"
+      role="combobox"
+      aria-labelledby="cityLabel"
+      aria-haspopup="listbox"
+      aria-controls="cityOptions"
+      aria-expanded="false"
+      autocomplete="off">
+    <div id="cityOptions" role="listbox" hidden>
+      <div role="option" data-value="brussels">Brussels</div>
+      <div role="option" data-value="antwerp">Antwerp</div>
+      <div role="option" data-value="ghent">Ghent</div>
+    </div>
+  </form>
+  <script>
+    const box = document.getElementById('cityBox');
+    const options = document.getElementById('cityOptions');
+    function openOptions() {
+      options.hidden = false;
+      box.setAttribute('aria-expanded', 'true');
+    }
+    function closeOptions() {
+      options.hidden = true;
+      box.setAttribute('aria-expanded', 'false');
+    }
+    box.addEventListener('focus', openOptions);
+    box.addEventListener('mousedown', openOptions);
+    box.addEventListener('click', openOptions);
+    box.addEventListener('keydown', event => {
+      if (event.key === 'ArrowDown') openOptions();
+      if (event.key === 'Escape') closeOptions();
+    });
+    options.addEventListener('click', event => {
+      const option = event.target.closest('[role="option"]');
+      if (!option) return;
+      box.value = option.textContent.trim();
+      closeOptions();
+    });
+  </script>
+</body>
+</html>

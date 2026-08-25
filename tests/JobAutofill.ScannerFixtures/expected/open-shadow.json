@@ -1,0 +1,13 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    { "labelIncludes": "Portfolio URL", "controlType": "url", "selectorIncludes": ">>>", "controlFamily": "text" }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "Portfolio URL", "controlType": "url" },
+      "value": "https://example.com/me",
+      "ok": true
+    }
+  ]
+}

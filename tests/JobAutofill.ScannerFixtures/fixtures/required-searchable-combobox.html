@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <div id="question_required">
+      <label id="educationLabel" for="education">What is your highest level of education? *</label>
+      <input
+        id="education"
+        role="combobox"
+        aria-labelledby="educationLabel"
+        aria-describedby="educationError"
+        aria-haspopup="listbox"
+        aria-controls="educationOptions"
+        aria-expanded="false"
+        autocomplete="off">
+      <div id="educationError" role="alert">Value is required</div>
+      <div id="educationOptions" role="listbox" hidden></div>
+    </div>
+
+    <div id="question_optional">
+      <label id="majorLabel" for="major">What is your major? Optional</label>
+      <input
+        id="major"
+        role="combobox"
+        aria-labelledby="majorLabel"
+        aria-haspopup="listbox"
+        aria-controls="majorOptions"
+        aria-expanded="false"
+        autocomplete="off">
+      <div id="majorOptions" role="listbox" hidden></div>
+    </div>
+  </form>
+</body>
+</html>

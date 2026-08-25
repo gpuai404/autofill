@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <label id="departmentLabel" for="department">Department</label>
+    <button
+      id="department"
+      type="button"
+      role="combobox"
+      aria-labelledby="departmentLabel"
+      aria-haspopup="grid"
+      aria-controls="departmentGrid"
+      aria-expanded="false">Select department</button>
+    <div id="departmentGrid" role="grid" hidden>
+      <div role="row" data-value="engineering">Engineering</div>
+      <div role="row" data-value="design">Design</div>
+      <div role="row" data-value="finance">Finance</div>
+    </div>
+  </form>
+  <script>
+    const button = document.getElementById('department');
+    const grid = document.getElementById('departmentGrid');
+    function openGrid() {
+      grid.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+    }
+    function closeGrid() {
+      grid.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    }
+    button.addEventListener('focus', openGrid);
+    button.addEventListener('mousedown', openGrid);
+    button.addEventListener('click', openGrid);
+    button.addEventListener('keydown', event => {
+      if (event.key === 'ArrowDown') openGrid();
+      if (event.key === 'Escape') closeGrid();
+    });
+    grid.addEventListener('click', event => {
+      const row = event.target.closest('[role="row"]');
+      if (!row) return;
+      button.textContent = row.textContent.trim();
+      closeGrid();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JobAutofill.App.Views.ProfileEditorPage"
+             Title="Profile">
+    <Grid Padding="16"
+          RowDefinitions="Auto,*"
+          RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="12">
+            <VerticalStackLayout Spacing="2">
+                <Label x:Name="ProfileNameLabel"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       LineBreakMode="TailTruncation" />
+                <Label x:Name="ProfileHeadlineLabel"
+                       TextColor="#666666"
+                       LineBreakMode="TailTruncation" />
+            </VerticalStackLayout>
+            <Button x:Name="EditSaveButton"
+                    Grid.Column="1"
+                    Text="Edit"
+                    Clicked="OnEditSaveClicked" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12">
+                <Border Padding="12"
+                        Stroke="#D8DEE4"
+                        StrokeThickness="1"
+                        BackgroundColor="#FFFFFF">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Contact"
+                               FontAttributes="Bold" />
+                        <Entry x:Name="FullNameEntry"
+                               Placeholder="Full name" />
+                        <Entry x:Name="EmailEntry"
+                               Placeholder="Email"
+                               Keyboard="Email" />
+                        <Entry x:Name="PhoneEntry"
+                               Placeholder="Phone"
+                               Keyboard="Telephone" />
+                        <Entry x:Name="AddressEntry"
+                               Placeholder="Address" />
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="10">
+                            <Entry x:Name="CityEntry"
+                                   Placeholder="City" />
+                            <Entry x:Name="StateEntry"
+                                   Grid.Column="1"
+                                   Placeholder="State" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="10">
+                            <Entry x:Name="PostalCodeEntry"
+                                   Placeholder="Postal code" />
+                            <Entry x:Name="CountryEntry"
+                                   Grid.Column="1"
+                                   Placeholder="Country" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12"
+                        Stroke="#D8DEE4"
+                        StrokeThickness="1"
+                        BackgroundColor="#FFFFFF">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Online profiles"
+                               FontAttributes="Bold" />
+                        <Entry x:Name="LinkedInEntry"
+                               Placeholder="LinkedIn URL"
+                               Keyboard="Url" />
+                        <Entry x:Name="PortfolioEntry"
+                               Placeholder="Portfolio URL"
+                               Keyboard="Url" />
+                        <Entry x:Name="GitHubEntry"
+                               Placeholder="GitHub URL"
+                               Keyboard="Url" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12"
+                        Stroke="#D8DEE4"
+                        StrokeThickness="1"
+                        BackgroundColor="#FFFFFF">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Resume"
+                               FontAttributes="Bold" />
+                        <Entry x:Name="CurrentTitleEntry"
+                               Placeholder="Current title" />
+                        <Entry x:Name="CurrentCompanyEntry"
+                               Placeholder="Current company" />
+                        <Entry x:Name="YearsExperienceEntry"
+                               Placeholder="Years of experience"
+                               Keyboard="Numeric" />
+                        <Entry x:Name="HighestEducationEntry"
+                               Placeholder="Highest education" />
+                        <Entry x:Name="ResumeFileNameEntry"
+                               Placeholder="Resume file name" />
+                        <Editor x:Name="SkillsEditor"
+                                Placeholder="Skills"
+                                AutoSize="TextChanges"
+                                HeightRequest="96" />
+                        <Editor x:Name="SummaryEditor"
+                                Placeholder="Resume summary"
+                                AutoSize="TextChanges"
+                                HeightRequest="132" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12"
+                        Stroke="#D8DEE4"
+                        StrokeThickness="1"
+                        BackgroundColor="#FFFFFF">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Eligibility"
+                               FontAttributes="Bold" />
+                        <Entry x:Name="WorkAuthorizationEntry"
+                               Placeholder="Work authorization" />
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12">
+                            <Label Text="Requires sponsorship"
+                                   VerticalTextAlignment="Center" />
+                            <Switch x:Name="SponsorshipSwitch"
+                                    Grid.Column="1" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12">
+                            <Label Text="Willing to relocate"
+                                   VerticalTextAlignment="Center" />
+                            <Switch x:Name="RelocateSwitch"
+                                    Grid.Column="1" />
+                        </Grid>
+                        <Entry x:Name="PreferredWorkTypeEntry"
+                               Placeholder="Preferred work type" />
+                        <Entry x:Name="SalaryExpectationEntry"
+                               Placeholder="Salary expectation" />
+                        <Entry x:Name="NoticePeriodEntry"
+                               Placeholder="Notice period" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12"
+                        Stroke="#D8DEE4"
+                        StrokeThickness="1"
+                        BackgroundColor="#FFFFFF">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Voluntary disclosures"
+                               FontAttributes="Bold" />
+                        <Entry x:Name="GenderEntry"
+                               Placeholder="Gender" />
+                        <Entry x:Name="RaceEntry"
+                               Placeholder="Race or ethnicity" />
+                        <Entry x:Name="HispanicLatinoEntry"
+                               Placeholder="Hispanic or Latino" />
+                        <Entry x:Name="VeteranEntry"
+                               Placeholder="Veteran status" />
+                        <Entry x:Name="DisabilityEntry"
+                               Placeholder="Disability status" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12"
+                        Stroke="#D8DEE4"
+                        StrokeThickness="1"
+                        BackgroundColor="#FFFFFF">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="ATS answers"
+                               FontAttributes="Bold" />
+                        <Editor x:Name="CoverLetterEditor"
+                                Placeholder="Cover letter answer"
+                                AutoSize="TextChanges"
+                                HeightRequest="120" />
+                        <Editor x:Name="WhyInterestedEditor"
+                                Placeholder="Why are you interested?"
+                                AutoSize="TextChanges"
+                                HeightRequest="110" />
+                        <Editor x:Name="AdditionalInfoEditor"
+                                Placeholder="Additional information"
+                                AutoSize="TextChanges"
+                                HeightRequest="110" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label x:Name="StatusLabel"
+                       TextColor="#666666"
+                       FontSize="12" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

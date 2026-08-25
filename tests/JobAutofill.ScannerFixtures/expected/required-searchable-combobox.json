@@ -1,0 +1,19 @@
+{
+  "minFieldCount": 2,
+  "fields": [
+    {
+      "labelIncludes": "highest level of education",
+      "controlType": "combobox",
+      "requiresCapturedOption": true,
+      "required": "true",
+      "optional": "false"
+    },
+    {
+      "labelIncludes": "major",
+      "controlType": "combobox",
+      "requiresCapturedOption": true,
+      "required": "false",
+      "optional": "true"
+    }
+  ]
+}

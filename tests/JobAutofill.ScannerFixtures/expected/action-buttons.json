@@ -1,0 +1,16 @@
+{
+  "minFieldCount": 1,
+  "minActionButtonCount": 7,
+  "fields": [
+    { "labelIncludes": "Name", "controlType": "text" }
+  ],
+  "actionButtons": [
+    { "labelIncludes": "Search school", "actionKind": "popupTrigger", "ariaHasPopup": "listbox" },
+    { "labelIncludes": "Upload resume", "actionKind": "upload" },
+    { "labelIncludes": "Back", "actionKind": "back" },
+    { "labelIncludes": "Continue", "actionKind": "next" },
+    { "labelIncludes": "Submit application", "actionKind": "submit", "nativeType": "submit" },
+    { "labelIncludes": "Cancel", "actionKind": "cancel", "role": "button" },
+    { "labelIncludes": "Remove file", "actionKind": "destructive" }
+  ]
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<body>
+  <form>
+    <label id="educationLabel" for="education">What is your highest level of education?</label>
+    <input
+      id="education"
+      role="combobox"
+      aria-labelledby="educationLabel"
+      aria-haspopup="listbox"
+      aria-controls="educationOptions"
+      aria-expanded="false"
+      autocomplete="off">
+    <div id="educationOptions" role="listbox" hidden></div>
+  </form>
+  <script>
+    const input = document.getElementById('education');
+    const list = document.getElementById('educationOptions');
+    const allOptions = [
+      'High School Diploma',
+      'Associate Degree',
+      'B.S. Computer Science',
+      'M.S. Computer Science',
+      'PhD Computer Science'
+    ];
+
+    function render() {
+      const query = input.value.trim().toLowerCase();
+      list.innerHTML = '';
+      if (!query) {
+        list.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        return;
+      }
+
+      allOptions
+        .filter(option => option.toLowerCase().includes(query))
+        .forEach(option => {
+          const item = document.createElement('div');
+          item.setAttribute('role', 'option');
+          item.setAttribute('data-value', option);
+          item.textContent = option;
+          list.appendChild(item);
+        });
+
+      list.hidden = list.children.length === 0;
+      input.setAttribute('aria-expanded', list.hidden ? 'false' : 'true');
+    }
+
+    input.addEventListener('focus', render);
+    input.addEventListener('input', render);
+    input.addEventListener('change', render);
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        list.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+      }
+    });
+    list.addEventListener('click', event => {
+      const option = event.target.closest('[role="option"]');
+      if (!option) return;
+      input.value = option.textContent.trim();
+      list.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+    });
+  </script>
+</body>
+</html>

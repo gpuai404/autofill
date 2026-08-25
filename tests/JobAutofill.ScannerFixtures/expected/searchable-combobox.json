@@ -1,0 +1,13 @@
+{
+  "minFieldCount": 1,
+  "fields": [
+    { "labelIncludes": "highest level of education", "controlType": "combobox", "requiresCapturedOption": true }
+  ],
+  "fill": [
+    {
+      "field": { "labelIncludes": "highest level of education", "controlType": "combobox" },
+      "value": "B.S. Computer Science, University",
+      "ok": true
+    }
+  ]
+}
