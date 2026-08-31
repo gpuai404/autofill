@@ -1,6 +1,6 @@
 using JobAutofill.Core.Capabilities;
 
-namespace JobAutofill.App.WebView;
+namespace JobAutofill.App.Models.WebView;
 
 public sealed record WebViewCapabilityResult(
     bool Scannable,

@@ -1,17 +1,24 @@
+using JobAutofill.App.Infrastructure;
 using JobAutofill.App.ViewModels;
 using Microsoft.Maui.Controls;
 
-namespace JobAutofill.App.Views;
+namespace JobAutofill.App.Pages;
 
 public partial class ProfileEditorPage : ContentPage
 {
-    private readonly ProfileEditorViewModel _viewModel;
+    private readonly IProfileEditorViewModel _viewModel;
 
     public ProfileEditorPage()
+        : this(MauiServiceResolver.ResolveRequiredService<IProfileEditorViewModel>())
+    {
+    }
+
+    private ProfileEditorPage(IProfileEditorViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = new ProfileEditorViewModel();
+        _viewModel = viewModel;
         BindingContext = _viewModel;
+        UpdateEditState();
     }
 
     private void OnEditSaveClicked(object? sender, EventArgs e)

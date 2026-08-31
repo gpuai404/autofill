@@ -1,3 +1,4 @@
+using JobAutofill.App.Models.WebView;
 using JobAutofill.Domain.Models;
 using Microsoft.Maui.Controls;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace JobAutofill.App.WebView;
 
-public sealed class JobWebViewBridge
+public sealed class JobWebViewBridge : IJobWebViewBridge
 {
     private const string GenericRulesAssetName = "metadata/generic-field-control-rules.json";
     private const int ScanCompletionAttemptLimit = 180;

@@ -1,6 +1,6 @@
 using JobAutofill.Domain.Models;
 
-namespace JobAutofill.App.WebView;
+namespace JobAutofill.App.Models.WebView;
 
 public sealed record WebViewOptionExtractionResult(
     bool Ok,

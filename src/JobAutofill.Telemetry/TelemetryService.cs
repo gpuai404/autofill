@@ -1,6 +1,6 @@
 namespace JobAutofill.Telemetry;
 
-public class TelemetryService
+public sealed class TelemetryService : ITelemetryService
 {
     public void Track(string eventName, Dictionary<string, string>? properties = null)
     {

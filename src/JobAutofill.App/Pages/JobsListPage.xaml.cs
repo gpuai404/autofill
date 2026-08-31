@@ -1,18 +1,26 @@
+using JobAutofill.App.Data;
+using JobAutofill.App.Infrastructure;
+using JobAutofill.Domain.Models;
 using Microsoft.Maui.Controls;
 
-namespace JobAutofill.App.Views;
+namespace JobAutofill.App.Pages;
 
 public partial class JobsListPage : ContentPage
 {
     public JobsListPage()
+        : this(MauiServiceResolver.ResolveRequiredService<IJobCatalog>())
+    {
+    }
+
+    private JobsListPage(IJobCatalog jobCatalog)
     {
         InitializeComponent();
-        JobsView.ItemsSource = SampleJobs.All;
+        JobsView.ItemsSource = jobCatalog.All;
     }
 
     private async void OnJobSelected(object? sender, SelectionChangedEventArgs e)
     {
-        if (e.CurrentSelection.FirstOrDefault() is not SampleJobPost jobPost)
+        if (e.CurrentSelection.FirstOrDefault() is not JobPost jobPost)
         {
             return;
         }
@@ -28,10 +36,10 @@ public partial class JobsListPage : ContentPage
             return;
         }
 
-        await NavigateToJobAsync(new SampleJobPost("Custom job", "Custom", "Web", CustomUrlEntry.Text));
+        await NavigateToJobAsync(new JobPost("Custom job", "Custom", "Web", CustomUrlEntry.Text));
     }
 
-    private static Task NavigateToJobAsync(SampleJobPost jobPost)
+    private static Task NavigateToJobAsync(JobPost jobPost)
     {
         return Shell.Current.GoToAsync("job-browser", new Dictionary<string, object>
         {

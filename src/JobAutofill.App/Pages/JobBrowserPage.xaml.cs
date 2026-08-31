@@ -1,12 +1,9 @@
-using JobAutofill.Core.Workflow;
-using JobAutofill.Core.Matching;
+using JobAutofill.App.Infrastructure;
 using JobAutofill.App.Services;
 using JobAutofill.App.WebView;
 using JobAutofill.App.ViewModels;
-using JobAutofill.App.Views;
-using JobAutofill.Infrastructure.Api;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
+using JobAutofill.Domain.Models;
 
 namespace JobAutofill.App.Pages;
 
@@ -15,21 +12,29 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
     private const double BottomSheetCollapsedHeight = 104d;
     private const double BottomSheetExpandedHeight = 340d;
     
-    private readonly JobBrowserViewModel _viewModel;
-    private readonly JobBrowserPageService _pageService;
+    private readonly IJobBrowserViewModel _viewModel;
+    private readonly IJobBrowserPageService _pageService;
+    private readonly IJobApplicationUrlResolver _jobApplicationUrlResolver;
     private bool _isBottomSheetExpanded;
 
     public JobBrowserPage()
-        : this(ResolveAutofillWorkflow())
+        : this(
+            MauiServiceResolver.ResolveRequiredService<IJobBrowserViewModel>(),
+            MauiServiceResolver.ResolveRequiredService<IJobBrowserPageServiceFactory>(),
+            MauiServiceResolver.ResolveRequiredService<IJobApplicationUrlResolver>())
     {
     }
 
-    private JobBrowserPage(AutofillWorkflow autofillWorkflow)
+    private JobBrowserPage(
+        IJobBrowserViewModel viewModel,
+        IJobBrowserPageServiceFactory pageServiceFactory,
+        IJobApplicationUrlResolver jobApplicationUrlResolver)
     {
         InitializeComponent();
         var webViewBridge = new JobWebViewBridge(JobWebView);
-        _viewModel = new JobBrowserViewModel();
-        _pageService = new JobBrowserPageService(_viewModel, autofillWorkflow, webViewBridge, _viewModel.DetectedFields);
+        _viewModel = viewModel;
+        _pageService = pageServiceFactory.Create(_viewModel, webViewBridge);
+        _jobApplicationUrlResolver = jobApplicationUrlResolver;
 
         BindingContext = _viewModel;
         DetectedFieldsView.ItemsSource = _viewModel.DetectedFields;
@@ -41,12 +46,11 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("JobPost", out var value) && value is SampleJobPost jobPost)
+        if (query.TryGetValue("JobPost", out var value) && value is JobPost jobPost)
         {
-            var jobUrl = ResolveScannableJobUrl(jobPost.Url);
+            var jobUrl = _jobApplicationUrlResolver.ResolveScannableUrl(jobPost.Url);
             Title = jobPost.Company;
-            _viewModel.JobTitle = $"{jobPost.Company} - {jobPost.Title}";
-            _viewModel.JobUrl = jobUrl;
+            _viewModel.SetJob(jobPost, jobUrl);
             
             _pageService.ResetForNewJob();
             ScanToolbarItem.IsEnabled = false;
@@ -55,31 +59,6 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
             SetBottomSheetExpanded(false);
             JobWebView.Source = new UrlWebViewSource { Url = jobUrl };
         }
-    }
-
-    private static string ResolveScannableJobUrl(string url)
-    {
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-        {
-            return url;
-        }
-
-        if (!string.Equals(uri.Host, "jobs.lever.co", StringComparison.OrdinalIgnoreCase))
-        {
-            return url;
-        }
-
-        if (uri.AbsolutePath.EndsWith("/apply", StringComparison.OrdinalIgnoreCase))
-        {
-            return uri.ToString();
-        }
-
-        var builder = new UriBuilder(uri)
-        {
-            Path = uri.AbsolutePath.TrimEnd('/') + "/apply"
-        };
-
-        return builder.Uri.ToString();
     }
 
     protected override bool OnBackButtonPressed()
@@ -212,15 +191,5 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
 
         await _pageService.SelectOptionAsync(option);
         UpdateToolbarItems();
-    }
-
-    private static AutofillWorkflow ResolveAutofillWorkflow()
-    {
-        var services = global::Microsoft.Maui.Controls.Application.Current?.Handler?.MauiContext?.Services;
-        return services?.GetService<AutofillWorkflow>() ??
-            new AutofillWorkflow(
-                new DetectedFieldNormalizer(),
-                new FieldApprovalWorkflow(new LocalProfileFieldMatcher(), new PlaceholderApiFieldDecisionClient()),
-                new FillCommandPlanner());
     }
 }

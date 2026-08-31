@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:JobAutofill.App.ViewModels"
-             x:Class="JobAutofill.App.Views.ProfileEditorPage"
+             x:Class="JobAutofill.App.Pages.ProfileEditorPage"
              x:DataType="vm:ProfileEditorViewModel"
              Title="Profile">
     <Grid Padding="16"

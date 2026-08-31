@@ -1,8 +1,9 @@
+using JobAutofill.Core.Contracts;
 using JobAutofill.Domain.Models;
 
 namespace JobAutofill.Infrastructure.Persistence;
 
-public class ProfileRepository
+public sealed class ProfileRepository : IProfileRepository
 {
     private readonly Dictionary<Guid, Profile> _store = new();
 

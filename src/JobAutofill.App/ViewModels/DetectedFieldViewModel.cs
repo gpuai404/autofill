@@ -63,15 +63,15 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
     public string? MatchedProfileAttribute { get; set; }
     public double Confidence { get; set; }
     public bool UserApproved { get; private set; }
-    public FieldDecisionStatus DecisionStatus { get; private set; } = FieldDecisionStatus.NeedsApiDecision;
-    public FieldDecisionReason DecisionReason { get; private set; } = FieldDecisionReason.MissingProfileValue;
+    public ApprovalItemStatus DecisionStatus { get; private set; } = ApprovalItemStatus.NeedsApiDecision;
+    public ApprovalDecisionReason DecisionReason { get; private set; } = ApprovalDecisionReason.MissingProfileValue;
     public bool HasFillValue => !string.IsNullOrWhiteSpace(ValueToFill);
     public bool HasOptions => Options.Count > 0;
     public bool HasMatchedOptions => MatchedOptions.Count > 0;
-    public bool CanAutoFill => DecisionStatus == FieldDecisionStatus.ReadyToFill && UserApproved;
-    public bool CanApprove => DecisionStatus == FieldDecisionStatus.ReadyToFill && !UserApproved;
-    public bool NeedsApiDecision => DecisionStatus == FieldDecisionStatus.NeedsApiDecision;
-    public bool IsBlocked => DecisionStatus == FieldDecisionStatus.Blocked;
+    public bool CanAutoFill => DecisionStatus == ApprovalItemStatus.ReadyForApproval && UserApproved || DecisionStatus == ApprovalItemStatus.Approved;
+    public bool CanApprove => DecisionStatus == ApprovalItemStatus.ReadyForApproval && !UserApproved;
+    public bool NeedsApiDecision => DecisionStatus == ApprovalItemStatus.NeedsApiDecision;
+    public bool IsBlocked => DecisionStatus is ApprovalItemStatus.Blocked or ApprovalItemStatus.Skipped;
     public int OptionCount => Options.Count;
     public string OptionsPreview => Options.Count == 0
         ? string.Empty
@@ -119,9 +119,10 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
             if (HasFillValue)
             {
                 if (!string.IsNullOrWhiteSpace(ReviewReason) &&
-                    DecisionStatus != FieldDecisionStatus.ReadyToFill)
+                    DecisionStatus != ApprovalItemStatus.ReadyForApproval &&
+                    DecisionStatus != ApprovalItemStatus.Approved)
                 {
-                    return DecisionStatus == FieldDecisionStatus.NeedsApiDecision
+                    return DecisionStatus == ApprovalItemStatus.NeedsApiDecision
                         ? OptionCount > 0
                             ? $"Needs API decision - {OptionCount} options"
                             : "Needs API decision"
@@ -131,12 +132,12 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
                 return UserApproved ? $"Approved: {ValueToFill}" : $"Approve: {ValueToFill}";
             }
 
-            if (DecisionStatus == FieldDecisionStatus.Blocked)
+            if (DecisionStatus is ApprovalItemStatus.Blocked or ApprovalItemStatus.Skipped)
             {
                 return "Blocked";
             }
 
-            if (DecisionStatus == FieldDecisionStatus.NeedsApiDecision)
+            if (DecisionStatus == ApprovalItemStatus.NeedsApiDecision)
             {
                 return OptionCount > 0
                     ? $"Needs API decision - {OptionCount} options"
@@ -163,16 +164,18 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
         MatchedOptions.Add(option);
         ValueToFill = option.FillValue;
         ReviewReason = null;
-        DecisionStatus = FieldDecisionStatus.ReadyToFill;
-        DecisionReason = FieldDecisionReason.None;
+        DecisionStatus = ApprovalItemStatus.Approved;
+        DecisionReason = ApprovalDecisionReason.None;
         UserApproved = true;
         NotifyStateChanged();
     }
 
     public void Approve()
     {
-        if (DecisionStatus == FieldDecisionStatus.ReadyToFill)
+        if (DecisionStatus == ApprovalItemStatus.ReadyForApproval)
         {
+            DecisionStatus = ApprovalItemStatus.Approved;
+            DecisionReason = ApprovalDecisionReason.None;
             UserApproved = true;
             NotifyStateChanged();
         }
@@ -186,8 +189,8 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
         }
 
         ReviewReason = null;
-        DecisionStatus = FieldDecisionStatus.ReadyToFill;
-        DecisionReason = FieldDecisionReason.None;
+        DecisionStatus = ApprovalItemStatus.Approved;
+        DecisionReason = ApprovalDecisionReason.None;
         UserApproved = true;
         NotifyStateChanged();
     }
@@ -213,27 +216,8 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
             }
         }
 
-        DecisionStatus = item.Status switch
-        {
-            ApprovalItemStatus.ReadyForApproval => FieldDecisionStatus.ReadyToFill,
-            ApprovalItemStatus.Approved => FieldDecisionStatus.ReadyToFill,
-            ApprovalItemStatus.Blocked => FieldDecisionStatus.Blocked,
-            ApprovalItemStatus.Skipped => FieldDecisionStatus.Blocked,
-            _ => FieldDecisionStatus.NeedsApiDecision
-        };
-
-        DecisionReason = item.Reason switch
-        {
-            ApprovalDecisionReason.None => FieldDecisionReason.None,
-            ApprovalDecisionReason.LocalHighConfidenceMatch => FieldDecisionReason.None,
-            ApprovalDecisionReason.ApiDecision => FieldDecisionReason.None,
-            ApprovalDecisionReason.MissingOptions => FieldDecisionReason.MissingOptions,
-            ApprovalDecisionReason.OptionMismatch => FieldDecisionReason.OptionMismatch,
-            ApprovalDecisionReason.AmbiguousSelectionMode => FieldDecisionReason.AmbiguousSelectionMode,
-            ApprovalDecisionReason.ManualOnlyControl => FieldDecisionReason.ManualOnlyControl,
-            ApprovalDecisionReason.UnsupportedControl => FieldDecisionReason.UnsupportedControl,
-            _ => FieldDecisionReason.MissingProfileValue
-        };
+        DecisionStatus = item.Status;
+        DecisionReason = item.Reason;
         NotifyStateChanged();
     }
 

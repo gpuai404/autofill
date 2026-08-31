@@ -1,12 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using JobAutofill.App.Views;
+using JobAutofill.App.Services;
 using JobAutofill.Domain.Models;
 
 namespace JobAutofill.App.ViewModels;
 
-public partial class ProfileEditorViewModel : ObservableObject
+public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorViewModel
 {
-    private readonly Profile _profile = ProfileStore.Current;
+    private readonly Profile _profile;
 
     [ObservableProperty]
     private string? _fullName;
@@ -119,8 +119,9 @@ public partial class ProfileEditorViewModel : ObservableObject
     [ObservableProperty]
     private string _statusText = "Ready";
 
-    public ProfileEditorViewModel()
+    public ProfileEditorViewModel(IProfileSession profileSession)
     {
+        _profile = profileSession.Current;
         LoadProfile();
         SetEditing(false);
     }

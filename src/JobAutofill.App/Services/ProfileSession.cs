@@ -1,10 +1,10 @@
 using JobAutofill.Domain.Models;
 
-namespace JobAutofill.App.Views;
+namespace JobAutofill.App.Services;
 
-public static class ProfileStore
+public sealed class ProfileSession : IProfileSession
 {
-    public static Profile Current { get; } = new()
+    public Profile Current { get; } = new()
     {
         FullName = "Alex Morgan",
         Email = "alex.morgan@example.com",
