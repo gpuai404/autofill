@@ -39,6 +39,7 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
     public string? Readonly { get; init; }
     public string? Multiple { get; init; }
     public string? ScanReason { get; init; }
+    public string? FieldMessage { get; init; }
     public bool RequiresCapturedOption { get; init; }
     public string? ValuePolicy { get; init; }
     public string? FillStrategy { get; init; }
@@ -83,6 +84,10 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
             ? "Options not captured"
             : string.Empty;
     public string ApprovalActionText => UserApproved ? "Approved" : "Approve";
+    public string DisplayTypeText => string.Equals(ControlType, "actionButton", StringComparison.OrdinalIgnoreCase)
+        ? "button"
+        : InputType ?? string.Empty;
+    public bool HasFieldMessage => !string.IsNullOrWhiteSpace(FieldMessage);
 
     private bool RequiresManualReview =>
         string.Equals(ValuePolicy, "manualReview", StringComparison.OrdinalIgnoreCase) ||
@@ -322,6 +327,7 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
             Readonly,
             Multiple,
             ScanReason,
+            FieldMessage,
             RequiresCapturedOption,
             ValuePolicy,
             FillStrategy,

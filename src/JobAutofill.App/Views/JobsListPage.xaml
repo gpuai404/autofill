@@ -29,7 +29,7 @@
                             Padding="12"
                             Stroke="#D8DEE4"
                             StrokeThickness="1"
-                            BackgroundColor="#FFFFFF">
+                            Background="#FFFFFF">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>

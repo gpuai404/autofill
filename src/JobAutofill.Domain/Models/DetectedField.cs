@@ -30,6 +30,7 @@ public class DetectedField
     public string? Readonly { get; set; }
     public string? Multiple { get; set; }
     public string? ScanReason { get; set; }
+    public string? FieldMessage { get; set; }
     public bool RequiresCapturedOption { get; set; }
     public string? ValuePolicy { get; set; }
     public string? FillStrategy { get; set; }

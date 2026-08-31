@@ -6,7 +6,7 @@
         <ResourceDictionary>
             <Color x:Key="PrimaryColor">#512BD4</Color>
             <Style TargetType="ContentPage">
-                <Setter Property="BackgroundColor" Value="White" />
+                <Setter Property="Background" Value="White" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

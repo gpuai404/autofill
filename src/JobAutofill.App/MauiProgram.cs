@@ -5,6 +5,9 @@ using JobAutofill.Infrastructure.Api;
 using JobAutofill.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
+#if MAUI_DEVFLOW
+using Microsoft.Maui.DevFlow.Agent;
+#endif
 
 namespace JobAutofill.App;
 
@@ -20,6 +23,10 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
+
+    #if MAUI_DEVFLOW
+        builder.AddMauiDevFlowAgent();
+    #endif
 
 #if ANDROID
         builder.ConfigureMauiHandlers(handlers =>

@@ -1,4 +1,6 @@
-(function () {
+(function (global) {
+  'use strict';
+
   const EDITABLE_FIELD_SELECTOR = [
     'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"])',
     'textarea',
@@ -24,38 +26,38 @@
     '[class*="editor"]'
   ].join(', ');
 
-  const domShared = window.__domShared || {};
+  const domShared = global.__domShared || {};
+  const normalize = typeof domShared.normalize === 'function'
+    ? domShared.normalize
+    : value => String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const isVisible = typeof domShared.isVisible === 'function'
+    ? domShared.isVisible
+    : function (element) {
+      try {
+        const style = global.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          rect.width > 0 &&
+          rect.height > 0;
+      } catch (error) {
+        return false;
+      }
+    };
   const shadowRootFor = typeof domShared.shadowRootFor === 'function'
     ? domShared.shadowRootFor
     : element => element && element.shadowRoot ? element.shadowRoot : null;
 
-  function normalize(value) {
-    return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
-  }
-
   function safeOrigin(value) {
     try {
-      return new URL(value, window.location.href).origin;
+      return new URL(value, global.location.href).origin;
     } catch (error) {
       return '';
     }
   }
 
-  function isVisible(element) {
-    try {
-      const style = window.getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
-      return style.display !== 'none' &&
-        style.visibility !== 'hidden' &&
-        rect.width > 0 &&
-        rect.height > 0;
-    } catch (error) {
-      return false;
-    }
-  }
-
   function standardFieldSelectors() {
-    const rules = window.__fieldControlRules || {};
+    const rules = global.__fieldControlRules || {};
     const selectors = Array.isArray(rules.fieldSelectors)
       ? rules.fieldSelectors
       : [
@@ -78,7 +80,7 @@
     let total = 0;
     selectors.forEach(selector => {
       try {
-        const count = document.querySelectorAll(selector).length;
+        const count = global.document.querySelectorAll(selector).length;
         counts[selector] = count;
         total += count;
       } catch (error) {
@@ -116,7 +118,7 @@
   }
 
   function scanDebugErrors() {
-    const debug = window.__scanDebug || {};
+    const debug = global.__scanDebug || {};
     return Array.isArray(debug.errors) ? debug.errors : [];
   }
 
@@ -156,11 +158,10 @@
     const matchedSelectors = [];
     captchaSelectors.forEach(selector => {
       try {
-        if (document.querySelector(selector)) {
+        if (global.document.querySelector(selector)) {
           matchedSelectors.push(selector);
         }
       } catch (error) {
-        // Ignore selector support differences across webviews.
       }
     });
 
@@ -173,7 +174,7 @@
   }
 
   function detectCrossOriginFrames() {
-    return Array.from(document.querySelectorAll('iframe')).map(iframe => {
+    return Array.from(global.document.querySelectorAll('iframe')).map(iframe => {
       const rect = iframe.getBoundingClientRect();
       let accessible = false;
       try {
@@ -193,7 +194,7 @@
   }
 
   function detectClosedShadowCandidates() {
-    return Array.from(document.querySelectorAll('*'))
+    return Array.from(global.document.querySelectorAll('*'))
       .filter(element => {
         const tag = element.tagName ? element.tagName.toLowerCase() : '';
         if (!tag.includes('-') || shadowRootFor(element)) {
@@ -215,7 +216,7 @@
   }
 
   function detectOpaqueVisualControls() {
-    return Array.from(document.querySelectorAll('canvas, [role="application"], [class*="editor"], [class*="picker"]'))
+    return Array.from(global.document.querySelectorAll('canvas, [role="application"], [class*="editor"], [class*="picker"]'))
       .filter(element => {
         const rect = element.getBoundingClientRect();
         if (!isVisible(element) || rect.width < 180 || rect.height < 80) {
@@ -230,7 +231,7 @@
   }
 
   function detectCustomVisualContainers() {
-    return Array.from(document.querySelectorAll('form, [role="form"], [data-testid], [data-test-id], main, section'))
+    return Array.from(global.document.querySelectorAll('form, [role="form"], [data-testid], [data-test-id], main, section'))
       .filter(container => {
         const rect = container.getBoundingClientRect();
         if (!isVisible(container) || rect.width < 180 || rect.height < 80 || hasAccessibleEditableDescendant(container)) {
@@ -256,8 +257,8 @@
   function probeCapabilities() {
     const selectors = standardFieldSelectors();
     const fieldStats = selectorCounts(selectors);
-    const pageText = normalize(document.body ? document.body.innerText || '' : '').slice(0, 4000);
-    const forms = document.querySelectorAll('form, [role="form"]').length;
+    const pageText = normalize(global.document.body ? global.document.body.innerText || '' : '').slice(0, 4000);
+    const forms = global.document.querySelectorAll('form, [role="form"]').length;
     const authGate = detectAuthGate(pageText);
     const captcha = detectCaptcha(pageText);
     const frames = detectCrossOriginFrames();
@@ -267,9 +268,9 @@
     const customVisualContainers = detectCustomVisualContainers();
     const visualControlRegions = opaqueVisualControls.concat(customVisualContainers).slice(0, 12);
     const baseEvidence = {
-      pageUrl: window.location.href,
-      pageTitle: document.title || '',
-      readyState: document.readyState,
+      pageUrl: global.location.href,
+      pageTitle: global.document.title || '',
+      readyState: global.document.readyState,
       standardFieldCount: fieldStats.total,
       selectorCounts: fieldStats.counts,
       formCount: forms,
@@ -279,6 +280,15 @@
       closedShadowCandidates: shadowCandidates,
       visualControlRegions
     };
+
+    const nonCaptchaLimits = authGate || inaccessibleFrames.length > 0 || shadowCandidates.length > 0 || visualControlRegions.length > 0;
+    if (fieldStats.total > 0 && captcha.present && !nonCaptchaLimits) {
+      return result(
+        'scannable',
+        'captcha-present',
+        'Standard DOM-backed fields are available. Protected challenge widgets may still require manual completion.',
+        baseEvidence);
+    }
 
     if (authGate || captcha.present || inaccessibleFrames.length > 0 || shadowCandidates.length > 0 || visualControlRegions.length > 0) {
       const reasons = [];
@@ -298,7 +308,5 @@
     return result('partial-scan', 'no-standard-fields', 'No standard DOM-backed field candidates were found yet; scanning still completed against supported selectors.', baseEvidence);
   }
 
-  window.__capabilityProbe = {
-    probeCapabilities
-  };
-})();
+  global.__capabilityProbe = { probeCapabilities };
+})(window);

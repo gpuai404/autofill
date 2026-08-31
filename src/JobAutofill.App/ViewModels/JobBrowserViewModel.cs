@@ -1,29 +1,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Windows.Input;
+using System.Collections.ObjectModel;
 
 namespace JobAutofill.App.ViewModels;
 
 public partial class JobBrowserViewModel : ObservableObject
 {
     [ObservableProperty]
-    private string _url = "https://example.com";
+    private string _statusText = "Ready";
 
     [ObservableProperty]
-    private WebViewSource? _webSource;
+    private string _jobTitle = string.Empty;
 
-    public ICommand OpenCommand { get; }
+    [ObservableProperty]
+    private string _jobUrl = string.Empty;
 
-    public JobBrowserViewModel()
-    {
-        OpenCommand = new RelayCommand(() =>
-        {
-            if (string.IsNullOrWhiteSpace(Url))
-            {
-                return;
-            }
-
-            WebSource = new UrlWebViewSource { Url = Url };
-        });
-    }
+    public ObservableCollection<DetectedFieldViewModel> DetectedFields { get; } = [];
 }

@@ -1,17 +1,30 @@
 (function () {
+  const genericRulesPath = '/src/JobAutofill.App/Platforms/Android/Scripts/metadata/generic-field-control-rules.json';
   const scriptPaths = [
-    '/src/JobAutofill.App/Platforms/Android/Scripts/runtime/dom-shared.js',
-    '/src/JobAutofill.App/Platforms/Android/Scripts/runtime/capability-probe.js',
-    '/src/JobAutofill.App/Platforms/Android/Scripts/scanner/detector.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/shared/shared-runtime.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/shared/text-utils.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/shared/dom-traversal.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/shared/selector-resolver.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/metadata/metadata-resolver.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/label-discovery.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/control-classification.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/choice-selection.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/choice-group-discovery.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/sensitive-fields.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/capability-probe.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/option-handling.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/option-source-handlers.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/action-classification.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/page-classification.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/diagnostics.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/scanner/scanner-engine.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/scanner/scanner.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/filler/fill.js'
   ];
 
-  const rulesPath = '/src/JobAutofill.App/Platforms/Android/Scripts/scanner/field-control-rules.json';
-
   const state = {
     manifest: null,
-    scripts: null,
-    rules: null
+    scripts: null
   };
 
   const resultsBody = document.getElementById('results');
@@ -32,8 +45,8 @@
 
   async function ensureAssets() {
     state.manifest ||= await loadJson('manifest.json');
-    state.rules ||= await loadJson(rulesPath);
     state.scripts ||= await Promise.all(scriptPaths.map(loadText));
+    state.genericRules ||= await loadJson(genericRulesPath);
   }
 
   function injectScript(frameWindow, source) {
@@ -52,7 +65,8 @@
       iframe.addEventListener('load', resolve, { once: true });
     });
 
-    iframe.contentWindow.__fieldControlRules = state.rules;
+    iframe.contentWindow.__fieldControlRules = state.genericRules;
+
     for (const script of state.scripts) {
       injectScript(iframe.contentWindow, script);
     }

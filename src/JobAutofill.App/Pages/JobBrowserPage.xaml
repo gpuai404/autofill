@@ -25,9 +25,8 @@
                      IsEnabled="False" />
     </ContentPage.ToolbarItems>
 
-    <Grid BackgroundColor="#F6F8FA">
+    <Grid Background="#F6F8FA">
         <WebView x:Name="JobWebView"
-                 Source="{Binding WebSource}"
                  Navigated="OnWebViewNavigated"
                  Navigating="OnWebViewNavigating" />
 
@@ -38,7 +37,7 @@
                 VerticalOptions="End"
                 Stroke="#D8DEE4"
                 StrokeThickness="1"
-                BackgroundColor="#FFFFFF">
+                Background="#FFFFFF">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="18" />
             </Border.StrokeShape>
@@ -74,48 +73,84 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Grid Padding="0,6"
-                                      ColumnDefinitions="*,Auto"
-                                      RowDefinitions="Auto"
-                                      ColumnSpacing="12"
-                                      RowSpacing="0">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnDetectedFieldTapped"
-                                                              CommandParameter="{Binding .}" />
-                                    </Grid.GestureRecognizers>
-                                    <VerticalStackLayout Spacing="2">
-                                        <Label Text="{Binding Label}"
-                                               FontAttributes="Bold"
-                                               FontSize="13"
-                                               LineBreakMode="TailTruncation" />
-                                        <Label Text="{Binding FillPreview}"
-                                               FontSize="12"
-                                               TextColor="#0969DA"
-                                               LineBreakMode="TailTruncation" />
-                                        <Label Text="{Binding OptionsSummary}"
-                                               FontSize="11"
-                                               TextColor="#57606A"
-                                               IsVisible="{Binding ShouldShowOptionsSummary}"
-                                               LineBreakMode="TailTruncation" />
-                                    </VerticalStackLayout>
-                                    <VerticalStackLayout Grid.Column="1"
-                                                         Spacing="4"
-                                                         VerticalOptions="Center">
-                                        <Label Text="{Binding InputType}"
-                                               FontSize="12"
-                                               HorizontalTextAlignment="End"
-                                               TextColor="#57606A" />
-                                        <Button Text="{Binding ApprovalActionText}"
-                                                Clicked="OnApproveFieldClicked"
-                                                IsVisible="{Binding CanApprove}"
-                                                Padding="10,4"
-                                                FontSize="12"
-                                                CornerRadius="6"
-                                                BorderWidth="1"
-                                                BorderColor="#0969DA"
-                                                BackgroundColor="#FFFFFF"
-                                                TextColor="#0969DA"
-                                                CommandParameter="{Binding .}" />
-                                    </VerticalStackLayout>
+                                      RowDefinitions="Auto,Auto,Auto"
+                                      RowSpacing="8">
+                                    <Grid ColumnDefinitions="*,Auto"
+                                          ColumnSpacing="12"
+                                          RowSpacing="0">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnDetectedFieldTapped"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Grid.GestureRecognizers>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Label}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="13"
+                                                   LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding FieldMessage}"
+                                                   FontSize="11"
+                                                   TextColor="#57606A"
+                                                   IsVisible="{Binding HasFieldMessage}"
+                                                   LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding FillPreview}"
+                                                   FontSize="12"
+                                                   TextColor="#0969DA"
+                                                   LineBreakMode="TailTruncation" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="4"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding DisplayTypeText}"
+                                                   FontSize="12"
+                                                   HorizontalTextAlignment="End"
+                                                   TextColor="#57606A" />
+                                            <Button Text="{Binding ApprovalActionText}"
+                                                    Clicked="OnApproveFieldClicked"
+                                                    IsVisible="{Binding CanApprove}"
+                                                    Padding="10,4"
+                                                    FontSize="12"
+                                                    CornerRadius="6"
+                                                    BorderWidth="1"
+                                                    BorderColor="#0969DA"
+                                                    Background="#FFFFFF"
+                                                    TextColor="#0969DA"
+                                                    CommandParameter="{Binding .}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+
+                                    <!-- Options Summary Label -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding OptionsSummary}"
+                                           FontSize="11"
+                                           TextColor="#57606A"
+                                           IsVisible="{Binding ShouldShowOptionsSummary}"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <!-- Individual Option Buttons (Horizontal Scroll) -->
+                                    <CollectionView Grid.Row="2"
+                                                    ItemsSource="{Binding Options}"
+                                                    SelectionMode="None"
+                                                    IsVisible="{Binding HasOptions}"
+                                                    HeightRequest="40">
+                                        <CollectionView.ItemsLayout>
+                                            <LinearItemsLayout Orientation="Horizontal"
+                                                               ItemSpacing="6" />
+                                        </CollectionView.ItemsLayout>
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Text="{Binding DisplayText}"
+                                                        Clicked="OnDetectedFieldOptionClicked"
+                                                        Padding="12,6"
+                                                        FontSize="11"
+                                                        CornerRadius="4"
+                                                        BorderWidth="1"
+                                                        BorderColor="#DDDDDD"
+                                                        Background="#F6F8FA"
+                                                        TextColor="#24292F"
+                                                        CommandParameter="{Binding .}" />
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -130,7 +165,7 @@
                            FontSize="12"
                            TextColor="#57606A"
                            LineBreakMode="TailTruncation"
-                           Text="{Binding StatusLabel}" />
+                           Text="{Binding StatusText}" />
                     <Label x:Name="JobTitleLabel"
                            Grid.Row="1"
                            FontAttributes="Bold"

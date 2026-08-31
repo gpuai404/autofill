@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:JobAutofill.App.ViewModels"
              x:Class="JobAutofill.App.Views.ProfileEditorPage"
+             x:DataType="vm:ProfileEditorViewModel"
              Title="Profile">
     <Grid Padding="16"
           RowDefinitions="Auto,*"
@@ -10,10 +12,12 @@
               ColumnSpacing="12">
             <VerticalStackLayout Spacing="2">
                 <Label x:Name="ProfileNameLabel"
+                       Text="{Binding ProfileNameLabel}"
                        FontSize="20"
                        FontAttributes="Bold"
                        LineBreakMode="TailTruncation" />
                 <Label x:Name="ProfileHeadlineLabel"
+                       Text="{Binding ProfileHeadlineLabel}"
                        TextColor="#666666"
                        LineBreakMode="TailTruncation" />
             </VerticalStackLayout>
@@ -28,7 +32,7 @@
                 <Border Padding="12"
                         Stroke="#D8DEE4"
                         StrokeThickness="1"
-                        BackgroundColor="#FFFFFF">
+                        Background="#FFFFFF">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -36,28 +40,36 @@
                         <Label Text="Contact"
                                FontAttributes="Bold" />
                         <Entry x:Name="FullNameEntry"
+                               Text="{Binding FullName}"
                                Placeholder="Full name" />
                         <Entry x:Name="EmailEntry"
+                               Text="{Binding Email}"
                                Placeholder="Email"
                                Keyboard="Email" />
                         <Entry x:Name="PhoneEntry"
+                               Text="{Binding Phone}"
                                Placeholder="Phone"
                                Keyboard="Telephone" />
                         <Entry x:Name="AddressEntry"
+                               Text="{Binding AddressLine1}"
                                Placeholder="Address" />
                         <Grid ColumnDefinitions="*,*"
                               ColumnSpacing="10">
                             <Entry x:Name="CityEntry"
+                                   Text="{Binding City}"
                                    Placeholder="City" />
                             <Entry x:Name="StateEntry"
+                                   Text="{Binding StateOrProvince}"
                                    Grid.Column="1"
                                    Placeholder="State" />
                         </Grid>
                         <Grid ColumnDefinitions="*,*"
                               ColumnSpacing="10">
                             <Entry x:Name="PostalCodeEntry"
+                                   Text="{Binding PostalCode}"
                                    Placeholder="Postal code" />
                             <Entry x:Name="CountryEntry"
+                                   Text="{Binding Country}"
                                    Grid.Column="1"
                                    Placeholder="Country" />
                         </Grid>
@@ -67,7 +79,7 @@
                 <Border Padding="12"
                         Stroke="#D8DEE4"
                         StrokeThickness="1"
-                        BackgroundColor="#FFFFFF">
+                        Background="#FFFFFF">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -75,12 +87,15 @@
                         <Label Text="Online profiles"
                                FontAttributes="Bold" />
                         <Entry x:Name="LinkedInEntry"
+                               Text="{Binding LinkedInUrl}"
                                Placeholder="LinkedIn URL"
                                Keyboard="Url" />
                         <Entry x:Name="PortfolioEntry"
+                               Text="{Binding PortfolioUrl}"
                                Placeholder="Portfolio URL"
                                Keyboard="Url" />
                         <Entry x:Name="GitHubEntry"
+                               Text="{Binding GitHubUrl}"
                                Placeholder="GitHub URL"
                                Keyboard="Url" />
                     </VerticalStackLayout>
@@ -89,7 +104,7 @@
                 <Border Padding="12"
                         Stroke="#D8DEE4"
                         StrokeThickness="1"
-                        BackgroundColor="#FFFFFF">
+                        Background="#FFFFFF">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -97,21 +112,28 @@
                         <Label Text="Resume"
                                FontAttributes="Bold" />
                         <Entry x:Name="CurrentTitleEntry"
+                               Text="{Binding CurrentTitle}"
                                Placeholder="Current title" />
                         <Entry x:Name="CurrentCompanyEntry"
+                               Text="{Binding CurrentCompany}"
                                Placeholder="Current company" />
                         <Entry x:Name="YearsExperienceEntry"
+                               Text="{Binding YearsExperience}"
                                Placeholder="Years of experience"
                                Keyboard="Numeric" />
                         <Entry x:Name="HighestEducationEntry"
+                               Text="{Binding HighestEducation}"
                                Placeholder="Highest education" />
                         <Entry x:Name="ResumeFileNameEntry"
+                               Text="{Binding ResumeFileName}"
                                Placeholder="Resume file name" />
                         <Editor x:Name="SkillsEditor"
+                                Text="{Binding Skills}"
                                 Placeholder="Skills"
                                 AutoSize="TextChanges"
                                 HeightRequest="96" />
                         <Editor x:Name="SummaryEditor"
+                                Text="{Binding ResumeSummary}"
                                 Placeholder="Resume summary"
                                 AutoSize="TextChanges"
                                 HeightRequest="132" />
@@ -121,7 +143,7 @@
                 <Border Padding="12"
                         Stroke="#D8DEE4"
                         StrokeThickness="1"
-                        BackgroundColor="#FFFFFF">
+                        Background="#FFFFFF">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -129,12 +151,14 @@
                         <Label Text="Eligibility"
                                FontAttributes="Bold" />
                         <Entry x:Name="WorkAuthorizationEntry"
+                               Text="{Binding WorkAuthorizationStatus}"
                                Placeholder="Work authorization" />
                         <Grid ColumnDefinitions="*,Auto"
                               ColumnSpacing="12">
                             <Label Text="Requires sponsorship"
                                    VerticalTextAlignment="Center" />
                             <Switch x:Name="SponsorshipSwitch"
+                                    IsToggled="{Binding RequiresSponsorship}"
                                     Grid.Column="1" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto"
@@ -142,13 +166,17 @@
                             <Label Text="Willing to relocate"
                                    VerticalTextAlignment="Center" />
                             <Switch x:Name="RelocateSwitch"
+                                    IsToggled="{Binding WillingToRelocate}"
                                     Grid.Column="1" />
                         </Grid>
                         <Entry x:Name="PreferredWorkTypeEntry"
+                               Text="{Binding PreferredWorkType}"
                                Placeholder="Preferred work type" />
                         <Entry x:Name="SalaryExpectationEntry"
+                               Text="{Binding SalaryExpectation}"
                                Placeholder="Salary expectation" />
                         <Entry x:Name="NoticePeriodEntry"
+                               Text="{Binding NoticePeriod}"
                                Placeholder="Notice period" />
                     </VerticalStackLayout>
                 </Border>
@@ -156,7 +184,7 @@
                 <Border Padding="12"
                         Stroke="#D8DEE4"
                         StrokeThickness="1"
-                        BackgroundColor="#FFFFFF">
+                        Background="#FFFFFF">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -164,14 +192,19 @@
                         <Label Text="Voluntary disclosures"
                                FontAttributes="Bold" />
                         <Entry x:Name="GenderEntry"
+                               Text="{Binding Gender}"
                                Placeholder="Gender" />
                         <Entry x:Name="RaceEntry"
+                               Text="{Binding RaceEthnicity}"
                                Placeholder="Race or ethnicity" />
                         <Entry x:Name="HispanicLatinoEntry"
+                               Text="{Binding HispanicLatino}"
                                Placeholder="Hispanic or Latino" />
                         <Entry x:Name="VeteranEntry"
+                               Text="{Binding VeteranStatus}"
                                Placeholder="Veteran status" />
                         <Entry x:Name="DisabilityEntry"
+                               Text="{Binding DisabilityStatus}"
                                Placeholder="Disability status" />
                     </VerticalStackLayout>
                 </Border>
@@ -179,7 +212,7 @@
                 <Border Padding="12"
                         Stroke="#D8DEE4"
                         StrokeThickness="1"
-                        BackgroundColor="#FFFFFF">
+                        Background="#FFFFFF">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -187,14 +220,17 @@
                         <Label Text="ATS answers"
                                FontAttributes="Bold" />
                         <Editor x:Name="CoverLetterEditor"
+                                Text="{Binding CoverLetter}"
                                 Placeholder="Cover letter answer"
                                 AutoSize="TextChanges"
                                 HeightRequest="120" />
                         <Editor x:Name="WhyInterestedEditor"
+                                Text="{Binding WhyInterested}"
                                 Placeholder="Why are you interested?"
                                 AutoSize="TextChanges"
                                 HeightRequest="110" />
                         <Editor x:Name="AdditionalInfoEditor"
+                                Text="{Binding AdditionalInfo}"
                                 Placeholder="Additional information"
                                 AutoSize="TextChanges"
                                 HeightRequest="110" />
@@ -202,6 +238,7 @@
                 </Border>
 
                 <Label x:Name="StatusLabel"
+                       Text="{Binding StatusText}"
                        TextColor="#666666"
                        FontSize="12" />
             </VerticalStackLayout>

@@ -28,7 +28,7 @@ public class CustomWebViewHandler : WebViewHandler
                 return;
             }
 
-            _documentStartScript ??= LoadAsset(platformView, "dom-shared.js");
+            _documentStartScript ??= LoadAsset(platformView, "shared/shared-runtime.js");
             WebViewCompat.AddDocumentStartJavaScript(
                 platformView,
                 _documentStartScript,
@@ -36,7 +36,7 @@ public class CustomWebViewHandler : WebViewHandler
         }
         catch
         {
-            // The regular bridge still injects dom-shared.js after navigation.
+            // The regular bridge still injects the shared runtime after navigation.
         }
     }
 

@@ -1,5 +1,6 @@
 using JobAutofill.Domain.Models;
 using Microsoft.Maui.Controls;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -7,17 +8,44 @@ namespace JobAutofill.App.WebView;
 
 public sealed class JobWebViewBridge
 {
+    private const string GenericRulesAssetName = "metadata/generic-field-control-rules.json";
     private const int ScanCompletionAttemptLimit = 180;
     private const int ScanCompletionDelayMs = 200;
     private const int OptionExtractionAttemptLimit = 100;
     private const int OptionExtractionDelayMs = 150;
+    private const int FillCompletionAttemptLimit = 20;
+    private const int FillCompletionDelayMs = 150;
+    private static readonly string[] DetectorAssetNames =
+    [
+        // Shared utilities (must load before scanner modules)
+        "shared/text-utils.js",
+        "shared/dom-traversal.js",
+        "shared/selector-resolver.js",
+        "webview/bridge-runtime.js",
+        // Metadata: built-in generic rules (site-specific metadata is provided by C# at runtime, not bundled in APK)
+        GenericRulesAssetName,
+        "metadata/metadata-resolver.js",
+        // Generic engine modules
+        "generic-engine/label-discovery.js",
+        "generic-engine/control-classification.js",
+        "generic-engine/choice-selection.js",
+        "generic-engine/choice-group-discovery.js",
+        "generic-engine/sensitive-fields.js",
+        "generic-engine/capability-probe.js",
+        "generic-engine/option-handling.js",
+        "generic-engine/option-source-handlers.js",
+        "generic-engine/action-classification.js",
+        "generic-engine/page-classification.js",
+        "generic-engine/diagnostics.js",
+        // Scanner
+        "scanner/scanner-engine.js",
+        "scanner/scanner.js"
+    ];
+
     private readonly Microsoft.Maui.Controls.WebView _webView;
-    private readonly WebViewScriptRuntime _scriptRuntime;
     private string? _domSharedScript;
-    private string? _capabilityProbeScript;
     private string? _detectorScript;
     private string? _fillScript;
-    private string? _fieldControlRulesJson;
     private bool _domSharedInjected;
     private bool _detectorInjected;
     private bool _fillScriptInjected;
@@ -25,7 +53,6 @@ public sealed class JobWebViewBridge
     public JobWebViewBridge(Microsoft.Maui.Controls.WebView webView)
     {
         _webView = webView;
-        _scriptRuntime = new WebViewScriptRuntime(webView);
     }
 
     public void ResetInjectedState()
@@ -44,25 +71,13 @@ public sealed class JobWebViewBridge
 
         await EnsureDomSharedInjectedAsync();
 
-        _capabilityProbeScript ??= await LoadAndroidAssetAsync("capability-probe.js");
-        _detectorScript ??= await LoadAndroidAssetAsync("detector.js");
-        _fieldControlRulesJson ??= await LoadAndroidAssetAsync("field-control-rules.json");
-        if (string.IsNullOrWhiteSpace(_capabilityProbeScript))
-        {
-            throw new InvalidOperationException("capability-probe.js was not packaged with the app.");
-        }
-
+        _detectorScript ??= await LoadAndroidAssetsAsync(DetectorAssetNames);
         if (string.IsNullOrWhiteSpace(_detectorScript))
         {
-            throw new InvalidOperationException("detector.js was not packaged with the app.");
+            throw new InvalidOperationException("The scanner scripts were not packaged with the app.");
         }
 
-        if (string.IsNullOrWhiteSpace(_fieldControlRulesJson))
-        {
-            throw new InvalidOperationException("field-control-rules.json was not packaged with the app.");
-        }
-
-        await _webView.EvaluateJavaScriptAsync($"window.__fieldControlRules = {_fieldControlRulesJson};\n{_capabilityProbeScript}\n{_detectorScript}");
+        await _webView.EvaluateJavaScriptAsync(_detectorScript);
         _detectorInjected = true;
     }
 
@@ -70,81 +85,32 @@ public sealed class JobWebViewBridge
     {
         await EnsureDetectorInjectedAsync();
 
-        await _webView.EvaluateJavaScriptAsync(@"
-(function () {
-  window.__scanFieldsResult = encodeURIComponent(JSON.stringify([]));
-  window.__scanFieldsError = '';
-  window.__scanFieldsDone = false;
-
-  try {
-    if (!window.__scanFields) {
-      window.__scanFieldsDone = true;
-      return true;
-    }
-
-    Promise.resolve()
-      .then(function () {
-        return window.__scanFields();
-      })
-      .then(function (fields) {
-        window.__scanFieldsResult = encodeURIComponent(JSON.stringify(Array.isArray(fields) ? fields : []));
-        window.__scanFieldsDone = true;
-      })
-      .catch(function (error) {
-        window.__scanFieldsError = error && error.stack ? error.stack : String(error);
-        window.__scanFieldsResult = encodeURIComponent(JSON.stringify([]));
-        window.__scanFieldsDone = true;
-      });
-
-    return true;
-  } catch (error) {
-    window.__scanFieldsError = error && error.stack ? error.stack : String(error);
-    window.__scanFieldsResult = encodeURIComponent(JSON.stringify([]));
-    window.__scanFieldsDone = true;
-    return true;
-  }
-})()
-");
-
-        for (var attempt = 0; attempt < ScanCompletionAttemptLimit; attempt++)
+        await _webView.EvaluateJavaScriptAsync("window.__jobAutofill.scanFields();");
+        var state = await WaitForJavaScriptOperationAsync("__scanFields", ScanCompletionAttemptLimit, ScanCompletionDelayMs);
+        var error = NormalizeJavaScriptStringResult(state.Error);
+        if (!string.IsNullOrWhiteSpace(error))
         {
-            var rawDone = await _webView.EvaluateJavaScriptAsync("window.__scanFieldsDone ? 'true' : 'false'");
-            var rawError = await _webView.EvaluateJavaScriptAsync("window.__scanFieldsError || ''");
-            var error = NormalizeJavaScriptStringResult(rawError);
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                var rawDebug = await _webView.EvaluateJavaScriptAsync("JSON.stringify(window.__scanDebug || {})");
-                throw new InvalidOperationException(error);
-            }
-
-            if (NormalizeJavaScriptStringResult(rawDone) == "true")
-            {
-                var rawResult = await _webView.EvaluateJavaScriptAsync("window.__scanFieldsResult || ''");
-                var rawDebug = await _webView.EvaluateJavaScriptAsync("JSON.stringify(window.__scanDebug || {})");
-                if (string.IsNullOrWhiteSpace(rawResult))
-                {
-                    var debugSummary = BuildJavaScriptDiagnosticSummary(rawDebug);
-                    throw new InvalidOperationException($"Scan finished without producing a payload.{debugSummary}");
-                }
-
-                try
-                {
-                    var normalizedResult = NormalizeAndValidateJsonPayload(rawResult, "scan result");
-                    var capability = await GetScanCapabilityAsync();
-                    return new WebViewScanResult(normalizedResult, ParseDetectedFields(normalizedResult), capability);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    var debugSummary = BuildJavaScriptDiagnosticSummary(rawDebug);
-                    throw new InvalidOperationException($"{ex.Message}{debugSummary}", ex);
-                }
-            }
-
-            await Task.Delay(ScanCompletionDelayMs);
+            throw new InvalidOperationException(error);
         }
 
-        var timeoutDebug = await _webView.EvaluateJavaScriptAsync("JSON.stringify(window.__scanDebug || {})");
-        throw new TimeoutException($"Timed out while waiting for the page scan to finish.{BuildJavaScriptDiagnosticSummary(timeoutDebug)}");
+        var rawDebug = await _webView.EvaluateJavaScriptAsync("JSON.stringify(window.__scanDebug || {})");
+        if (string.IsNullOrWhiteSpace(state.Result))
+        {
+            var debugSummary = BuildJavaScriptDiagnosticSummary(rawDebug);
+            throw new InvalidOperationException($"Scan finished without producing a payload.{debugSummary}");
+        }
+
+        try
+        {
+            var normalizedResult = NormalizeAndValidateJsonPayload(state.Result, "scan result");
+            var capability = await GetScanCapabilityAsync();
+            return new WebViewScanResult(normalizedResult, ParseDetectedFields(normalizedResult), capability);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var debugSummary = BuildJavaScriptDiagnosticSummary(rawDebug);
+            throw new InvalidOperationException($"{ex.Message}{debugSummary}", ex);
+        }
     }
 
     public async Task<WebViewOptionExtractionResult> ExtractOptionsForFieldAsync(DetectedField field)
@@ -152,55 +118,16 @@ public sealed class JobWebViewBridge
         await EnsureDetectorInjectedAsync();
 
         var selector = JsonSerializer.Serialize(field.Selector);
-        await _webView.EvaluateJavaScriptAsync($@"
-(function () {{
-  window.__extractOptionsForFieldResult = '';
-  window.__extractOptionsForFieldError = '';
-  window.__extractOptionsForFieldDone = false;
-
-  if (!window.__extractOptionsForField) {{
-    window.__extractOptionsForFieldResult = encodeURIComponent(JSON.stringify({{ ok: false, message: 'option extractor missing', options: [] }}));
-    window.__extractOptionsForFieldDone = true;
-    return true;
-  }}
-
-  Promise.resolve(window.__extractOptionsForField({selector}))
-    .then(function (result) {{
-      window.__extractOptionsForFieldResult = encodeURIComponent(JSON.stringify(result || {{ ok: false, message: 'empty option extraction result', options: [] }}));
-      window.__extractOptionsForFieldDone = true;
-    }})
-    .catch(function (error) {{
-      window.__extractOptionsForFieldError = error && error.stack ? error.stack : String(error);
-      window.__extractOptionsForFieldResult = encodeURIComponent(JSON.stringify({{ ok: false, message: window.__extractOptionsForFieldError, options: [] }}));
-      window.__extractOptionsForFieldDone = true;
-    }});
-
-  return true;
-}})()");
-
-        for (var attempt = 0; attempt < OptionExtractionAttemptLimit; attempt++)
+        await _webView.EvaluateJavaScriptAsync($"window.__jobAutofill.extractOptionsForField({selector});");
+        var state = await WaitForJavaScriptOperationAsync("__extractOptionsForField", OptionExtractionAttemptLimit, OptionExtractionDelayMs, false);
+        var error = NormalizeJavaScriptStringResult(state.Error);
+        await CloseOpenOptionPopupsAsync();
+        if (!string.IsNullOrWhiteSpace(error))
         {
-            var rawDone = await _webView.EvaluateJavaScriptAsync("window.__extractOptionsForFieldDone ? 'true' : 'false'");
-            var rawError = await _webView.EvaluateJavaScriptAsync("window.__extractOptionsForFieldError || ''");
-            var error = NormalizeJavaScriptStringResult(rawError);
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                await CloseOpenOptionPopupsAsync();
-                return new WebViewOptionExtractionResult(false, error, [], false);
-            }
-
-            if (NormalizeJavaScriptStringResult(rawDone) == "true")
-            {
-                var rawResult = await _webView.EvaluateJavaScriptAsync("window.__extractOptionsForFieldResult || ''");
-                await CloseOpenOptionPopupsAsync();
-                return ParseOptionExtractionResult(field, rawResult);
-            }
-
-            await Task.Delay(OptionExtractionDelayMs);
+            return new WebViewOptionExtractionResult(false, error, [], false);
         }
 
-        await CloseOpenOptionPopupsAsync();
-        return new WebViewOptionExtractionResult(false, "Timed out while extracting options for this field.", [], false);
+        return ParseOptionExtractionResult(field, state.Result);
     }
 
     public Task CloseOpenOptionPopupsAsync()
@@ -212,46 +139,15 @@ public sealed class JobWebViewBridge
     {
         await EnsureDetectorInjectedAsync();
 
-        await _webView.EvaluateJavaScriptAsync(@"
-(function () {
-  window.__closeOpenOptionPopupsDone = false;
-  window.__closeOpenOptionPopupsError = '';
-
-  try {
-    Promise.resolve(window.__closeOpenOptionPopups ? window.__closeOpenOptionPopups() : true)
-      .then(function () {
-        window.__closeOpenOptionPopupsDone = true;
-      })
-      .catch(function (error) {
-        window.__closeOpenOptionPopupsError = error && error.stack ? error.stack : String(error);
-        window.__closeOpenOptionPopupsDone = true;
-      });
-  } catch (error) {
-    window.__closeOpenOptionPopupsError = error && error.stack ? error.stack : String(error);
-    window.__closeOpenOptionPopupsDone = true;
-  }
-
-  return true;
-})()");
-
-        for (var attempt = 0; attempt < OptionExtractionAttemptLimit; attempt++)
-        {
-            var rawDone = await _webView.EvaluateJavaScriptAsync("window.__closeOpenOptionPopupsDone ? 'true' : 'false'");
-            if (NormalizeJavaScriptStringResult(rawDone) == "true")
-            {
-                return;
-            }
-
-            await Task.Delay(OptionExtractionDelayMs);
-        }
+        await _webView.EvaluateJavaScriptAsync("window.__jobAutofill.closeOpenOptionPopups();");
+        await WaitForJavaScriptOperationAsync("__closeOpenOptionPopups", OptionExtractionAttemptLimit, OptionExtractionDelayMs, false);
     }
 
     public async Task<string> GetCurrentPageClassificationAsync()
     {
         try
         {
-            var rawClassification = await _webView.EvaluateJavaScriptAsync(
-                "JSON.stringify(window.__classifyPage ? window.__classifyPage() : { classification: 'unsupported', reason: 'No classifier available.', evidence: {} })");
+            var rawClassification = await _webView.EvaluateJavaScriptAsync("window.__jobAutofill.getPageClassification();");
 
             if (string.IsNullOrWhiteSpace(rawClassification))
             {
@@ -278,7 +174,7 @@ public sealed class JobWebViewBridge
     {
         try
         {
-            var rawCapability = await _webView.EvaluateJavaScriptAsync("encodeURIComponent(JSON.stringify(window.__scanCapability || {}))");
+            var rawCapability = await _webView.EvaluateJavaScriptAsync("window.__jobAutofill.getScanCapability();");
             if (string.IsNullOrWhiteSpace(rawCapability))
             {
                 return WebViewCapabilityResult.Unknown;
@@ -311,29 +207,7 @@ public sealed class JobWebViewBridge
     public async Task FocusFieldAsync(DetectedField field)
     {
         var selector = JsonSerializer.Serialize(field.Selector);
-        await _webView.EvaluateJavaScriptAsync($@"
-(function () {{
-  const element = document.querySelector({selector});
-  if (!element) {{
-    return false;
-  }}
-
-  element.scrollIntoView({{ block: 'center', inline: 'nearest', behavior: 'smooth' }});
-  if (typeof element.focus === 'function') {{
-    element.focus();
-  }}
-
-  const previousOutline = element.style.outline;
-  const previousBoxShadow = element.style.boxShadow;
-  element.style.outline = '3px solid #229ED9';
-  element.style.boxShadow = '0 0 0 4px rgba(34, 158, 217, 0.24)';
-  window.setTimeout(function () {{
-    element.style.outline = previousOutline;
-    element.style.boxShadow = previousBoxShadow;
-  }}, 1600);
-
-  return true;
-}})()");
+        await _webView.EvaluateJavaScriptAsync($"window.__jobAutofill.focusField({selector});");
     }
 
     public async Task<WebViewFillResult> FillAsync(FillCommand command)
@@ -372,85 +246,27 @@ public sealed class JobWebViewBridge
         var selector = JsonSerializer.Serialize(command.Selector);
         var optionJson = JsonSerializer.Serialize(option);
         var fillStrategy = JsonSerializer.Serialize(command.FillStrategy);
-        await _webView.EvaluateJavaScriptAsync($@"
-(function () {{
-  window.__fillFieldOptionResult = '';
-  window.__fillFieldOptionError = '';
-  window.__fillFieldOptionDone = false;
-  if (!window.__fillFieldOption) {{
-    window.__fillFieldOptionResult = encodeURIComponent(JSON.stringify({{ ok: false, message: 'fill option script missing' }}));
-    window.__fillFieldOptionDone = true;
-    return true;
-  }}
-
-  Promise.resolve(window.__fillFieldOption({selector}, {optionJson}, {fillStrategy}))
-    .then(function (result) {{
-      window.__fillFieldOptionResult = encodeURIComponent(JSON.stringify(result || {{ ok: false, message: 'empty fill result' }}));
-      window.__fillFieldOptionDone = true;
-    }})
-    .catch(function (error) {{
-      window.__fillFieldOptionError = error && error.stack ? error.stack : String(error);
-      window.__fillFieldOptionResult = encodeURIComponent(JSON.stringify({{ ok: false, message: window.__fillFieldOptionError }}));
-      window.__fillFieldOptionDone = true;
-    }});
-
-  return true;
-}})()");
-
-        for (var attempt = 0; attempt < 20; attempt++)
+        await _webView.EvaluateJavaScriptAsync($"window.__jobAutofill.fillFieldOption({selector}, {optionJson}, {fillStrategy});");
+        var state = await WaitForJavaScriptOperationAsync("__fillFieldOption", FillCompletionAttemptLimit, FillCompletionDelayMs, false);
+        var error = NormalizeJavaScriptStringResult(state.Error);
+        if (!string.IsNullOrWhiteSpace(error))
         {
-            var rawDone = await _webView.EvaluateJavaScriptAsync("window.__fillFieldOptionDone ? 'true' : 'false'");
-            var rawResult = await _webView.EvaluateJavaScriptAsync("window.__fillFieldOptionResult || ''");
-            var rawError = await _webView.EvaluateJavaScriptAsync("window.__fillFieldOptionError || ''");
-            var error = NormalizeJavaScriptStringResult(rawError);
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                return new WebViewFillResult(false, error);
-            }
-
-            if (NormalizeJavaScriptStringResult(rawDone) == "true")
-            {
-                await ResetWebViewAfterFillAsync();
-                return ParseFillResult(rawResult);
-            }
-
-            await Task.Delay(100);
+            return new WebViewFillResult(false, error);
         }
 
-        var timeoutResult = new
-        {
-            ok = false,
-            message = "Timed out while selecting captured option."
-        };
-        var rawTimeoutResult = Uri.EscapeDataString(JsonSerializer.Serialize(timeoutResult));
-        return ParseFillResult(rawTimeoutResult);
+        await ResetWebViewAfterFillAsync();
+        return ParseFillResult(state.Result);
     }
 
     public async Task ClearFieldHighlightAsync(DetectedField field)
     {
         var selector = JsonSerializer.Serialize(field.Selector);
-        await _webView.EvaluateJavaScriptAsync($@"
-(function () {{
-  const element = document.querySelector({selector});
-  if (element) {{
-    element.style.outline = '';
-    element.style.boxShadow = '';
-    if (typeof element.blur === 'function') {{
-      element.blur();
-    }}
-  }}
-
-  if (document.activeElement && typeof document.activeElement.blur === 'function') {{
-    document.activeElement.blur();
-  }}
-
-  return true;
-}})()");
+        await _webView.EvaluateJavaScriptAsync($"window.__jobAutofill.clearFieldHighlight({selector});");
     }
 
     public async Task<string> GetEncodedScanDebugJsonAsync()
     {
-        var rawDebugJson = await _webView.EvaluateJavaScriptAsync("encodeURIComponent(JSON.stringify(window.__scanDebug || {}))");
+        var rawDebugJson = await _webView.EvaluateJavaScriptAsync("window.__jobAutofill.getScanDebugJson();");
         return Uri.UnescapeDataString(rawDebugJson ?? "{}");
     }
 
@@ -463,10 +279,16 @@ public sealed class JobWebViewBridge
 
         await EnsureDomSharedInjectedAsync();
 
-        _fillScript ??= await LoadAndroidAssetAsync("fill.js");
-        if (string.IsNullOrWhiteSpace(_fillScript))
+        if (_fillScript == null)
         {
-            throw new InvalidOperationException("fill.js was not packaged with the app.");
+            var optionHandlingScript = await LoadAndroidAssetAsync("generic-engine/option-handling.js");
+            var fillScript = await LoadAndroidAssetAsync("filler/fill.js");
+            if (string.IsNullOrWhiteSpace(optionHandlingScript) || string.IsNullOrWhiteSpace(fillScript))
+            {
+                throw new InvalidOperationException("option-handling.js or fill.js was not packaged with the app.");
+            }
+
+            _fillScript = optionHandlingScript + "\n" + fillScript;
         }
 
         await _webView.EvaluateJavaScriptAsync(_fillScript);
@@ -480,84 +302,21 @@ public sealed class JobWebViewBridge
         var selector = JsonSerializer.Serialize(command.Selector);
         var value = JsonSerializer.Serialize(command.Value);
         var fillStrategy = JsonSerializer.Serialize(command.FillStrategy);
-        await _webView.EvaluateJavaScriptAsync($@"
-(function () {{
-  window.__fillFieldResult = '';
-  window.__fillFieldError = '';
-  window.__fillFieldDone = false;
-  if (!window.__fillField) {{
-    window.__fillFieldResult = encodeURIComponent(JSON.stringify({{ ok: false, message: 'fill script missing' }}));
-    window.__fillFieldDone = true;
-    return true;
-  }}
-
-  Promise.resolve(window.__fillField({selector}, {value}, {fillStrategy}))
-    .then(function (result) {{
-      window.__fillFieldResult = encodeURIComponent(JSON.stringify(result || {{ ok: false, message: 'empty fill result' }}));
-      window.__fillFieldDone = true;
-    }})
-    .catch(function (error) {{
-      window.__fillFieldError = error && error.stack ? error.stack : String(error);
-      window.__fillFieldResult = encodeURIComponent(JSON.stringify({{ ok: false, message: window.__fillFieldError }}));
-      window.__fillFieldDone = true;
-    }});
-
-  return true;
-}})()");
-
-        for (var attempt = 0; attempt < 20; attempt++)
+        await _webView.EvaluateJavaScriptAsync($"window.__jobAutofill.fillField({selector}, {value}, {fillStrategy});");
+        var state = await WaitForJavaScriptOperationAsync("__fillField", FillCompletionAttemptLimit, FillCompletionDelayMs, false);
+        var error = NormalizeJavaScriptStringResult(state.Error);
+        await ResetWebViewAfterFillAsync();
+        if (!string.IsNullOrWhiteSpace(error))
         {
-            var rawDone = await _webView.EvaluateJavaScriptAsync("window.__fillFieldDone ? 'true' : 'false'");
-            var rawResult = await _webView.EvaluateJavaScriptAsync("window.__fillFieldResult || ''");
-            var rawError = await _webView.EvaluateJavaScriptAsync("window.__fillFieldError || ''");
-            var error = NormalizeJavaScriptStringResult(rawError);
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                await ResetWebViewAfterFillAsync();
-                return new WebViewFillResult(false, error);
-            }
-
-            if (NormalizeJavaScriptStringResult(rawDone) == "true")
-            {
-                await ResetWebViewAfterFillAsync();
-                return ParseFillResult(rawResult);
-            }
-
-            await Task.Delay(150);
+            return new WebViewFillResult(false, error);
         }
 
-        await ResetWebViewAfterFillAsync();
-        return new WebViewFillResult(false, "Timed out while filling this field.");
+        return ParseFillResult(state.Result);
     }
 
     private Task ResetWebViewAfterFillAsync()
     {
-        return _webView.EvaluateJavaScriptAsync(@"
-(function () {
-  if (window.__clearActiveFillState && typeof window.__clearActiveFillState === 'function') {
-    try {
-      return window.__clearActiveFillState();
-    } catch (error) {
-      // Fall through to a simple blur fallback.
-    }
-  }
-
-  try {
-    const active = document.activeElement;
-    if (active && typeof active.blur === 'function') {
-      active.blur();
-    }
-
-    const body = document.body || document.documentElement;
-    if (body && typeof body.focus === 'function') {
-      body.focus();
-    }
-
-    return true;
-  } catch (error) {
-    return false;
-  }
-})()");
+        return _webView.EvaluateJavaScriptAsync("window.__jobAutofill.resetFillState();");
     }
 
     private async Task EnsureDomSharedInjectedAsync()
@@ -567,14 +326,86 @@ public sealed class JobWebViewBridge
             return;
         }
 
-        _domSharedScript ??= await LoadAndroidAssetAsync("dom-shared.js");
+        _domSharedScript ??= await LoadAndroidAssetAsync("shared/shared-runtime.js");
         if (string.IsNullOrWhiteSpace(_domSharedScript))
         {
-            throw new InvalidOperationException("dom-shared.js was not packaged with the app.");
+            throw new InvalidOperationException("shared-runtime.js was not packaged with the app.");
         }
 
         await _webView.EvaluateJavaScriptAsync(_domSharedScript);
         _domSharedInjected = true;
+    }
+
+    private static async Task<string> LoadAndroidAssetsAsync(IEnumerable<string> assetNames)
+    {
+        var scripts = new StringBuilder();
+
+        foreach (var assetName in assetNames)
+        {
+            var script = await LoadAndroidAssetAsync(assetName);
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                throw new InvalidOperationException($"{assetName} was not packaged with the app.");
+            }
+
+            scripts.AppendLine($"// {assetName}");
+            scripts.AppendLine(BuildInjectedAssetScript(assetName, script));
+        }
+
+        return scripts.ToString();
+    }
+
+    private async Task<JavaScriptOperationState> WaitForJavaScriptOperationAsync(
+        string stateName,
+        int attemptLimit,
+        int delayMs,
+        bool throwOnTimeout = true)
+    {
+        for (var attempt = 0; attempt < attemptLimit; attempt++)
+        {
+            var rawDone = await _webView.EvaluateJavaScriptAsync($"window.{stateName}Done ? 'true' : 'false'");
+            var rawResult = await _webView.EvaluateJavaScriptAsync($"window.{stateName}Result || ''");
+            var rawError = await _webView.EvaluateJavaScriptAsync($"window.{stateName}Error || ''");
+            if (NormalizeJavaScriptStringResult(rawDone) == "true")
+            {
+                return new JavaScriptOperationState(rawResult, rawError);
+            }
+
+            await Task.Delay(delayMs);
+        }
+
+        if (!throwOnTimeout)
+        {
+            return new JavaScriptOperationState(
+                Uri.EscapeDataString(JsonSerializer.Serialize(new { ok = false, message = BuildTimeoutMessage(stateName) })),
+                string.Empty);
+        }
+
+        var timeoutDebug = await _webView.EvaluateJavaScriptAsync("JSON.stringify(window.__scanDebug || {})");
+        throw new TimeoutException($"Timed out while waiting for {stateName} to finish.{BuildJavaScriptDiagnosticSummary(timeoutDebug)}");
+    }
+
+    private static string BuildTimeoutMessage(string stateName)
+    {
+        return stateName switch
+        {
+            "__fillFieldOption" => "Timed out while selecting captured option.",
+            "__fillField" => "Timed out while filling this field.",
+            "__extractOptionsForField" => "Timed out while extracting options for this field.",
+            _ => $"Timed out while waiting for {stateName} to finish."
+        };
+    }
+
+    private static string BuildInjectedAssetScript(string assetName, string assetContent)
+    {
+        if (assetName == GenericRulesAssetName)
+        {
+            using var document = JsonDocument.Parse(assetContent);
+            var normalizedRules = JsonSerializer.Serialize(document.RootElement);
+            return $"window.__fieldControlRules = {normalizedRules};";
+        }
+
+        return assetContent;
     }
 
     private static async Task<string> LoadAndroidAssetAsync(string assetName)
@@ -764,6 +595,7 @@ public sealed class JobWebViewBridge
         }
     }
 
+
     private static string NormalizeAndValidateJsonPayload(string? rawResult, string payloadName)
     {
         if (string.IsNullOrWhiteSpace(rawResult))
@@ -861,4 +693,6 @@ public sealed class JobWebViewBridge
         public bool OptionsTruncated { get; set; }
         public bool PopupClosed { get; set; }
     }
+
+    private sealed record JavaScriptOperationState(string? Result, string? Error);
 }
