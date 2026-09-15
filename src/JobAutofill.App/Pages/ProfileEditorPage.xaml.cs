@@ -21,9 +21,17 @@ public partial class ProfileEditorPage : ContentPage
         UpdateEditState();
     }
 
-    private void OnEditSaveClicked(object? sender, EventArgs e)
+    protected override async void OnAppearing()
     {
-        _viewModel.ToggleEdit();
+        base.OnAppearing();
+
+        await _viewModel.LoadProfileAsync();
+        UpdateEditState();
+    }
+
+    private async void OnEditSaveClicked(object? sender, EventArgs e)
+    {
+        await _viewModel.ToggleEditAsync();
         UpdateEditState();
     }
 

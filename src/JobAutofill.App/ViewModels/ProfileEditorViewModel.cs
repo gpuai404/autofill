@@ -1,12 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using JobAutofill.App.Services;
+using JobAutofill.Core.Contracts;
 using JobAutofill.Domain.Models;
 
 namespace JobAutofill.App.ViewModels;
 
 public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorViewModel
 {
-    private readonly Profile _profile;
+    private readonly IProfileRepository _profileRepository;
+    private Profile? _profile;
 
     [ObservableProperty]
     private string? _fullName;
@@ -119,27 +120,33 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
     [ObservableProperty]
     private string _statusText = "Ready";
 
-    public ProfileEditorViewModel(IProfileSession profileSession)
+    public ProfileEditorViewModel(IProfileRepository profileRepository)
     {
-        _profile = profileSession.Current;
-        LoadProfile();
+        _profileRepository = profileRepository;
         SetEditing(false);
     }
 
-    public void ToggleEdit()
+    public async Task ToggleEditAsync(CancellationToken cancellationToken = default)
     {
         if (IsEditing)
         {
-            SaveProfile();
+            await SaveProfileAsync(cancellationToken);
             SetEditing(false);
             return;
+        }
+
+        if (_profile is null)
+        {
+            await LoadProfileAsync(cancellationToken);
         }
 
         SetEditing(true);
     }
 
-    public void LoadProfile()
+    public async Task LoadProfileAsync(CancellationToken cancellationToken = default)
     {
+        _profile = await _profileRepository.GetCurrentAsync(cancellationToken);
+
         FullName = _profile.FullName;
         Email = _profile.Email;
         Phone = _profile.Phone;
@@ -176,8 +183,10 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
         RefreshHeader();
     }
 
-    public void SaveProfile()
+    public async Task SaveProfileAsync(CancellationToken cancellationToken = default)
     {
+        _profile ??= await _profileRepository.GetCurrentAsync(cancellationToken);
+
         _profile.FullName = FullName;
         _profile.Email = Email;
         _profile.Phone = Phone;
@@ -212,6 +221,8 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
         _profile.CustomAnswers["AdditionalInfo"] = AdditionalInfo ?? string.Empty;
         _profile.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
+        await _profileRepository.SaveAsync(_profile, cancellationToken);
+
         RefreshHeader();
         StatusText = $"Saved {DateTime.Now:g}";
     }
@@ -233,6 +244,6 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
 
     private string GetCustomAnswer(string key)
     {
-        return _profile.CustomAnswers.TryGetValue(key, out var value) ? value : string.Empty;
+        return _profile?.CustomAnswers.TryGetValue(key, out var value) == true ? value : string.Empty;
     }
 }

@@ -2,6 +2,7 @@ using JobAutofill.Core.Capabilities;
 using JobAutofill.Core.Contracts;
 using JobAutofill.Core.Matching;
 using JobAutofill.Domain.Models;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 
 namespace JobAutofill.Core.Workflow;
@@ -46,16 +47,33 @@ public sealed class FieldApprovalWorkflow
             return localItems;
         }
 
-        var apiResults = await _apiDecisionClient.DecideAsync(
-            new ApiFieldDecisionRequest
-            {
-                PageUrl = pageUrl,
-                PageHost = Uri.TryCreate(pageUrl, UriKind.Absolute, out var pageUri) ? pageUri.Host : null,
-                CapabilityReport = capabilityReport,
-                Fields = apiCandidates,
-                Profile = profile
-            },
-            cancellationToken);
+        IReadOnlyList<ApiFieldDecisionResult> apiResults;
+        try
+        {
+            apiResults = await _apiDecisionClient.DecideAsync(
+                new ApiFieldDecisionRequest
+                {
+                    PageUrl = pageUrl,
+                    PageHost = Uri.TryCreate(pageUrl, UriKind.Absolute, out var pageUri) ? pageUri.Host : null,
+                    CapabilityReport = capabilityReport,
+                    Fields = apiCandidates,
+                    Profile = profile
+                },
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException or TaskCanceledException)
+        {
+            var message = $"Decision API unavailable: {FirstLine(ex.Message)}";
+            return localItems
+                .Select(item => item.Status == ApprovalItemStatus.NeedsApiDecision
+                    ? BuildApiUnavailableApprovalItem(item.Field, item.FieldId, message)
+                    : item)
+                .ToList();
+        }
 
         var apiResultMap = apiResults.ToDictionary(result => result.FieldId, StringComparer.Ordinal);
         return localItems
@@ -209,6 +227,31 @@ public sealed class FieldApprovalWorkflow
                 : ApprovalDecisionReason.ApiDecision,
             Message = string.IsNullOrWhiteSpace(result.Reason) ? "API decision returned." : result.Reason
         };
+    }
+
+    private static ApprovalItem BuildApiUnavailableApprovalItem(
+        DetectedField field,
+        string fieldId,
+        string message)
+    {
+        return new ApprovalItem
+        {
+            FieldId = fieldId,
+            Field = field,
+            Status = ApprovalItemStatus.NeedsUserInput,
+            Reason = ApprovalDecisionReason.ApiUnavailable,
+            Message = message
+        };
+    }
+
+    private static string FirstLine(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return "no error detail returned";
+        }
+
+        return message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? message;
     }
 
     private static IEnumerable<SelectedFieldOption> KeepCapturedOptionsOnly(

@@ -2,6 +2,7 @@ using JobAutofill.App.Mappers;
 using JobAutofill.App.Models.WebView;
 using JobAutofill.App.ViewModels;
 using JobAutofill.App.WebView;
+using JobAutofill.Core.Contracts;
 using System.Text.Json;
 
 namespace JobAutofill.App.Services;
@@ -17,7 +18,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
     private readonly IJobBrowserWorkflowService _workflowService;
     private readonly IJobBrowserStatusService _statusService;
     private readonly IDetectedFieldViewModelMapper _detectedFieldViewModelMapper;
-    private readonly IProfileSession _profileSession;
+    private readonly IProfileRepository _profileRepository;
     
     private string? _lastScanRawResult;
     private WebViewCapabilityResult _lastScanCapability = WebViewCapabilityResult.Unknown;
@@ -28,14 +29,14 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         IJobBrowserWorkflowService workflowService,
         IJobBrowserStatusService statusService,
         IDetectedFieldViewModelMapper detectedFieldViewModelMapper,
-        IProfileSession profileSession)
+        IProfileRepository profileRepository)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _webViewBridge = webViewBridge ?? throw new ArgumentNullException(nameof(webViewBridge));
         _workflowService = workflowService ?? throw new ArgumentNullException(nameof(workflowService));
         _statusService = statusService ?? throw new ArgumentNullException(nameof(statusService));
         _detectedFieldViewModelMapper = detectedFieldViewModelMapper ?? throw new ArgumentNullException(nameof(detectedFieldViewModelMapper));
-        _profileSession = profileSession ?? throw new ArgumentNullException(nameof(profileSession));
+        _profileRepository = profileRepository ?? throw new ArgumentNullException(nameof(profileRepository));
     }
 
     public async Task ScanAsync(string pageUrl)
@@ -52,7 +53,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
                 pageUrl,
                 scanResult.Fields,
                 _lastScanCapability,
-                _profileSession.Current);
+                await _profileRepository.GetCurrentAsync());
             _viewModel.ReplaceDetectedFields(preparedFields);
 
             var fillableCount = _viewModel.DetectedFields.Count(field => field.CanApprove || field.CanAutoFill);
@@ -78,7 +79,6 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         catch (Exception ex)
         {
             _viewModel.SetStatus($"Scan failed: {FirstLine(ex.ToString())}");
-            throw;
         }
     }
 

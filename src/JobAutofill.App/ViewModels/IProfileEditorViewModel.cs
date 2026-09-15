@@ -39,7 +39,7 @@ public interface IProfileEditorViewModel
     string? ProfileNameLabel { get; }
     string? ProfileHeadlineLabel { get; }
     string StatusText { get; }
-    void ToggleEdit();
-    void LoadProfile();
-    void SaveProfile();
+    Task ToggleEditAsync(CancellationToken cancellationToken = default);
+    Task LoadProfileAsync(CancellationToken cancellationToken = default);
+    Task SaveProfileAsync(CancellationToken cancellationToken = default);
 }

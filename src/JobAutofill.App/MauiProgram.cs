@@ -6,7 +6,7 @@ using JobAutofill.App.Mappers;
 using JobAutofill.App.Pages;
 using JobAutofill.App.Services;
 using JobAutofill.App.ViewModels;
-using JobAutofill.Infrastructure.Api;
+using JobAutofill.Infrastructure;
 using JobAutofill.Infrastructure.Persistence;
 using JobAutofill.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,8 +41,8 @@ public static class MauiProgram
         });
 #endif
 
+        builder.Services.AddJobAutofillInfrastructure();
         builder.Services.AddSingleton<IProfileRepository, ProfileRepository>();
-        builder.Services.AddSingleton<IProfileSession, ProfileSession>();
         builder.Services.AddSingleton<IJobCatalog, SampleJobCatalog>();
         builder.Services.AddSingleton<IJobApplicationUrlResolver, JobApplicationUrlResolver>();
         builder.Services.AddSingleton<IJobBrowserStatusService, JobBrowserStatusService>();
@@ -54,7 +54,6 @@ public static class MauiProgram
         builder.Services.AddSingleton<LocalProfileFieldMatcher>();
         builder.Services.AddSingleton<DetectedFieldNormalizer>();
         builder.Services.AddSingleton<FillCommandPlanner>();
-        builder.Services.AddSingleton<IApiFieldDecisionClient, PlaceholderApiFieldDecisionClient>();
         builder.Services.AddSingleton<FieldApprovalWorkflow>();
         builder.Services.AddSingleton<AutofillWorkflow>();
         builder.Services.AddSingleton<IJobBrowserWorkflowService, JobBrowserWorkflowService>();
