@@ -6,6 +6,7 @@ public partial class App : Application
 
     public App(AppShell appShell)
     {
+        AppLocalizer.ApplyCurrentCulture();
         _appShell = appShell;
         InitializeComponent();
     }

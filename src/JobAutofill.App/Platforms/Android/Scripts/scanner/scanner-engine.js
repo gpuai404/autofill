@@ -71,6 +71,7 @@
   const dispatchPointerEvent = domShared.dispatchPointerEvent;
   const dispatchMouseEvent = domShared.dispatchMouseEvent;
   const closePopup = domShared.closePopup;
+  const siteRules = window.__jobAutofillSiteRules || {};
 
   const CHOICE_VISUAL_CONTROL_SELECTOR = [
     '[role="radio"]',
@@ -291,39 +292,26 @@
       return '';
     }
 
-    const selfSignals = [
-      element.id,
-      element.name,
-      element.getAttribute('class'),
-      element.getAttribute('aria-label'),
-      element.getAttribute('data-testid'),
-      element.getAttribute('data-test-id')
-    ].map(normalize).join(' ');
-
-    if (/\b(?:ot-group-id|onetrust|cookiebot|cmp-)/.test(selfSignals) ||
-      /\b(?:vendor-search-handler|select-all-vendor|select-all-hosts|chkbox-id)\b/.test(selfSignals)) {
-      return 'Control belongs to a cookie/privacy preference widget.';
+    const applicationRoots = Array.isArray(siteRules.roots?.application)
+      ? siteRules.roots.application
+      : [];
+    if (applicationRoots.length > 0 && !applicationRoots.some(selector => {
+      try { return Boolean(composedClosest(element, selector)); }
+      catch (_) { return false; }
+    })) {
+      return 'Control is outside the configured application root.';
     }
 
-    let current = element;
-    for (let depth = 0; current && current !== document.body && depth < 8; depth++) {
-      const signals = [
-        current.id,
-        current.getAttribute('class'),
-        current.getAttribute('role'),
-        current.getAttribute('aria-label'),
-        current.getAttribute('data-testid'),
-        current.getAttribute('data-test-id')
-      ].map(normalize).join(' ');
-
-      if (/\b(?:onetrust|ot-sdk|ot-pc|cookiebot|cookie-consent|cookie-banner|cookie-preference|consent-manager|privacy-preference|preference-center|cmp-container)\b/.test(signals)) {
-        return 'Control is inside a cookie/privacy preference widget.';
+    const selectors = []
+      .concat(Array.isArray(siteRules.exclude?.controls) ? siteRules.exclude.controls : [])
+      .concat(Array.isArray(siteRules.exclude?.containers) ? siteRules.exclude.containers : []);
+    return selectors.some(selector => {
+      try {
+        return element.matches(selector) || Boolean(composedClosest(element, selector));
+      } catch (_) {
+        return false;
       }
-
-      current = composedParentElement(current);
-    }
-
-    return '';
+    }) ? 'Control belongs to a site-excluded widget.' : '';
   }
 
   function optionFromElement(element, selector, selected) {
@@ -774,7 +762,7 @@
   async function findFields() {
     const fields = [];
     const rules = window.__fieldControlRules || {};
-    const selectors = Array.isArray(rules.fieldSelectors)
+    const selectors = (Array.isArray(rules.fieldSelectors)
       ? rules.fieldSelectors
       : [
         'input:not([type="hidden"]):not([type="file"]):not([id*="recaptcha"]):not([name*="recaptcha"]):not([id*="hcaptcha"]):not([name*="hcaptcha"])',
@@ -784,7 +772,9 @@
         '[role="textbox"]',
         '[role="searchbox"]',
         '[aria-haspopup="listbox"]'
-    ];
+    ]).concat(Array.isArray(siteRules.discovery?.fieldSelectors)
+      ? siteRules.discovery.fieldSelectors
+      : []);
     const seen = new Set();
     const seenFileContainers = new Set();
 
@@ -972,38 +962,9 @@
     return fields;
   }
 
-  window.__scanDebug = {
-    pageUrl: window.location.href,
-    pageTitle: document.title || '',
-    readyState: document.readyState,
-    selectorCounts: {},
-    fieldCount: 0,
-    detectedSelectors: [],
-    errors: [],
-    lastError: null
-  };
-
-  window.addEventListener('error', function (event) {
-    const message = event && event.message ? String(event.message) : 'Unknown browser error';
-    const source = event && event.filename ? String(event.filename) : 'unknown';
-    const line = event && event.lineno ? String(event.lineno) : 'unknown';
-    window.__scanDebug.errors.push({ message, source, line, stack: event && event.error ? String(event.error.stack || event.error) : '' });
-    window.__scanDebug.lastError = { message, source, line };
-  });
-
-  window.addEventListener('unhandledrejection', function (event) {
-    const reason = event && event.reason ? String(event.reason && event.reason.stack ? event.reason.stack : event.reason) : 'Unhandled promise rejection';
-    window.__scanDebug.errors.push({ message: reason, source: 'unhandledrejection', line: 'n/a' });
-    window.__scanDebug.lastError = { message: reason, source: 'unhandledrejection', line: 'n/a' };
-  });
-
-  const originalConsoleError = console.error.bind(console);
-  console.error = function () {
-    const message = Array.from(arguments).map(arg => String(arg)).join(' ');
-    window.__scanDebug.errors.push({ message, source: 'console.error', line: 'n/a' });
-    window.__scanDebug.lastError = { message, source: 'console.error', line: 'n/a' };
-    return originalConsoleError.apply(console, arguments);
-  };
+  if (typeof window.__scanDiagnostics?.initialize === 'function') {
+    window.__scanDiagnostics.initialize(window.__jobAutofillConfig || {});
+  }
 
   function classifyPage() {
     if (window.__pageClassification && typeof window.__pageClassification.classifyPage === 'function') return window.__pageClassification.classifyPage();

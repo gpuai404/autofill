@@ -15,4 +15,15 @@ internal static class MauiServiceResolver
 
         return services.GetRequiredService<T>();
     }
+
+    public static IEnumerable<T> ResolveServices<T>() where T : notnull
+    {
+        var services = Application.Current?.Handler?.MauiContext?.Services;
+        if (services is null)
+        {
+            throw new InvalidOperationException($"Could not resolve {typeof(T).Name} because the MAUI service provider is unavailable.");
+        }
+
+        return services.GetServices<T>();
+    }
 }

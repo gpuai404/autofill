@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:app="clr-namespace:JobAutofill.App"
              x:Class="JobAutofill.App.Pages.JobBrowserPage"
-             Title="Autofill"
+             Title="{x:Static app:AppLocalizer.AutofillPageTitle}"
              Shell.NavBarIsVisible="True">
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="ScanToolbarItem"
-                     Text="Scan"
+                     Text="{x:Static app:AppLocalizer.ScanAction}"
                      Order="Primary"
                      Priority="0"
                      Clicked="OnScanClicked"
                      IsEnabled="True" />
         <ToolbarItem x:Name="FillToolbarItem"
-                     Text="Fill"
+                     Text="{x:Static app:AppLocalizer.FillAction}"
                      Order="Primary"
                      Priority="1"
                      Clicked="OnFillClicked"
-                     IsEnabled="False" />
+                     IsEnabled="{Binding CanFill}" />
         <ToolbarItem x:Name="DebugToolbarItem"
-                     Text="Debug"
+                     Text="{x:Static app:AppLocalizer.DebugAction}"
                      Order="Secondary"
                      Priority="2"
                      Clicked="OnDebugClicked"
@@ -58,15 +59,30 @@
                       Grid.Row="1"
                       RowDefinitions="Auto,*"
                       RowSpacing="6">
-                    <Label Text="Detected fields"
-                           FontAttributes="Bold"
-                           FontSize="13"
-                           TextColor="#24292F" />
+                    <VerticalStackLayout Spacing="1">
+                        <Label Text="Application assistant"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               TextColor="#24292F" />
+                        <Label Text="{Binding FieldSummary}"
+                               FontSize="11"
+                               TextColor="#57606A" />
+                    </VerticalStackLayout>
                     <CollectionView x:Name="DetectedFieldsView"
                                     Grid.Row="1"
-                                    ItemsSource="{Binding DetectedFields}">
+                                    ItemsSource="{Binding FieldGroups}"
+                                    IsGrouped="True">
+                        <CollectionView.GroupHeaderTemplate>
+                            <DataTemplate>
+                                <Label Text="{Binding Title}"
+                                       Padding="0,10,0,4"
+                                       FontAttributes="Bold"
+                                       FontSize="12"
+                                       TextColor="#24292F" />
+                            </DataTemplate>
+                        </CollectionView.GroupHeaderTemplate>
                         <CollectionView.EmptyView>
-                            <Label Text="Scan opens detected fields here."
+                            <Label Text="{x:Static app:AppLocalizer.ScanHint}"
                                    TextColor="#666666"
                                    FontSize="12" />
                         </CollectionView.EmptyView>
@@ -86,11 +102,6 @@
                                             <Label Text="{Binding Label}"
                                                    FontAttributes="Bold"
                                                    FontSize="13"
-                                                   LineBreakMode="TailTruncation" />
-                                            <Label Text="{Binding FieldMessage}"
-                                                   FontSize="11"
-                                                   TextColor="#57606A"
-                                                   IsVisible="{Binding HasFieldMessage}"
                                                    LineBreakMode="TailTruncation" />
                                             <Label Text="{Binding FillPreview}"
                                                    FontSize="12"

@@ -103,6 +103,7 @@
     const runExtractionActionsUntilOptions = options.runExtractionActionsUntilOptions;
     const waitForLateRenderedOptions = options.waitForLateRenderedOptions;
     const maxOptionsPerField = options.maxOptionsPerField;
+    const siteRules = global.__jobAutofillSiteRules || {};
 
     function toUniqueOptions(items) {
       return uniqueOptions(items, normalize, maxOptionsPerField);
@@ -143,7 +144,16 @@
         return [];
       }
 
-      const strict = collectElementsAcrossRoots(root, OPTION_ITEM_SELECTOR)
+      const configuredSelectors = Array.isArray(siteRules.options?.optionSelectors)
+        ? siteRules.options.optionSelectors
+        : [];
+      const strictSelector = [OPTION_ITEM_SELECTOR].concat(configuredSelectors).join(', ');
+      const hook = siteRules.hooks?.extractOptionElements;
+      const hookElements = typeof hook === 'function'
+        ? hook(root, { allowScopedFallback: Boolean(allowScopedFallback) })
+        : [];
+      const strict = collectElementsAcrossRoots(root, strictSelector)
+        .concat(Array.isArray(hookElements) ? hookElements : [])
         .filter(isVisible)
         .filter(option => isOptionText(optionTextFor(option)));
       if (strict.length > 0 || !allowScopedFallback) {
@@ -184,7 +194,9 @@
       const roots = controlledPopupRoots(element)
         .filter(root => isVisible(root) || optionCandidateElementsFrom(root, false).length > 0);
 
-      const localRoot = composedClosest(element, '[role="combobox"], [aria-haspopup], .select, .select__control, .react-select__control, .form-field, .form-group');
+      const localRootSelectors = ['[role="combobox"]', '[aria-haspopup]', '.form-field', '.form-group']
+        .concat(Array.isArray(siteRules.options?.localRootSelectors) ? siteRules.options.localRootSelectors : []);
+      const localRoot = composedClosest(element, localRootSelectors.join(', '));
       if (localRoot) {
         const localListbox = collectElementsAcrossRoots(localRoot, OPTION_ROOT_SELECTOR + ', ' + OPTION_ITEM_SELECTOR)
           .find(isVisible);
@@ -208,7 +220,8 @@
 
     function reactSelectOptionPrefixFor(element) {
       const id = element && element.id ? String(element.id).trim() : '';
-      return id ? 'react-select-' + id + '-option-' : '';
+      const optionIdPrefix = String(siteRules.options?.optionIdPrefix || '');
+      return id && optionIdPrefix ? optionIdPrefix + id + '-option-' : '';
     }
 
     function visibleReactSelectOptionsFor(element) {
@@ -235,7 +248,12 @@
     function visiblePopupContainersFor(element) {
       const roots = controlledPopupRoots(element);
 
-      roots.push.apply(roots, collectElementsAcrossRoots(document, FALLBACK_POPUP_CONTAINER_SELECTOR)
+      const popupSelectors = Array.isArray(siteRules.options?.popupSelectors)
+        ? siteRules.options.popupSelectors
+        : [];
+      roots.push.apply(roots, collectElementsAcrossRoots(
+        document,
+        [FALLBACK_POPUP_CONTAINER_SELECTOR].concat(popupSelectors).join(', '))
         .filter(isVisible)
         .filter(root => !nonApplicationControlReason(root)));
 

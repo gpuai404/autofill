@@ -16,6 +16,20 @@ public partial class JobBrowserViewModel : ObservableObject, IJobBrowserViewMode
     private string _jobUrl = string.Empty;
 
     public ObservableCollection<DetectedFieldViewModel> DetectedFields { get; } = [];
+    public ObservableCollection<DetectedFieldGroupViewModel> FieldGroups { get; } = [];
+    public bool CanFill => DetectedFields.Any(item => item.CanAutoFill);
+    public string FieldSummary
+    {
+        get
+        {
+            var ready = DetectedFields.Count(item => item.CanAutoFill);
+            var attention = DetectedFields.Count(item => item.NeedsAttention);
+            var manual = DetectedFields.Count(item => item.IsManual);
+            return DetectedFields.Count == 0
+                ? "No application fields scanned"
+                : $"{ready} ready · {attention} need attention · {manual} manual";
+        }
+    }
 
     public void SetJob(JobPost jobPost, string jobUrl)
     {
@@ -31,7 +45,10 @@ public partial class JobBrowserViewModel : ObservableObject, IJobBrowserViewMode
     public void ResetForLoading()
     {
         DetectedFields.Clear();
+        FieldGroups.Clear();
         StatusText = "Loading page...";
+        OnPropertyChanged(nameof(CanFill));
+        OnPropertyChanged(nameof(FieldSummary));
     }
 
     public void ReplaceDetectedFields(IEnumerable<DetectedFieldViewModel> fields)
@@ -41,6 +58,26 @@ public partial class JobBrowserViewModel : ObservableObject, IJobBrowserViewMode
         foreach (var field in fields)
         {
             DetectedFields.Add(field);
+            field.PropertyChanged += (_, _) => RefreshGroups();
         }
+
+        RefreshGroups();
+    }
+
+    private void RefreshGroups()
+    {
+        FieldGroups.Clear();
+        AddGroup("Needs attention", DetectedFields.Where(field => field.NeedsAttention && !field.IsManual));
+        AddGroup("Ready to fill", DetectedFields.Where(field => field.CanAutoFill));
+        AddGroup("Manual steps", DetectedFields.Where(field => field.IsManual && !field.IsCompleted));
+        AddGroup("Completed", DetectedFields.Where(field => field.IsCompleted));
+        OnPropertyChanged(nameof(CanFill));
+        OnPropertyChanged(nameof(FieldSummary));
+    }
+
+    private void AddGroup(string title, IEnumerable<DetectedFieldViewModel> fields)
+    {
+        var items = fields.ToList();
+        if (items.Count > 0) FieldGroups.Add(new DetectedFieldGroupViewModel(title, items));
     }
 }

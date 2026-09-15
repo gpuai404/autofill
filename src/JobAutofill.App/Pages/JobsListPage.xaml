@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:app="clr-namespace:JobAutofill.App"
              x:Class="JobAutofill.App.Pages.JobsListPage"
-             Title="Jobs">
+             Title="{x:Static app:AppLocalizer.JobsPageTitle}">
     <Grid Padding="16"
           RowDefinitions="Auto,*"
           RowSpacing="12">
         <Grid ColumnDefinitions="*,Auto"
               ColumnSpacing="10">
             <Entry x:Name="CustomUrlEntry"
-                   Placeholder="Paste job URL" />
+                   Placeholder="{x:Static app:AppLocalizer.PasteJobUrlPlaceholder}" />
             <Button Grid.Column="1"
-                    Text="Open"
+                    Text="{x:Static app:AppLocalizer.OpenAction}"
                     Clicked="OnOpenCustomUrlClicked" />
         </Grid>
 
@@ -20,7 +21,7 @@
                         SelectionMode="Single"
                         SelectionChanged="OnJobSelected">
             <CollectionView.EmptyView>
-                <Label Text="No jobs available."
+                <Label Text="{x:Static app:AppLocalizer.NoJobsAvailable}"
                        TextColor="#666666" />
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>

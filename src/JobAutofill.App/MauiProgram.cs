@@ -6,7 +6,6 @@ using JobAutofill.App.Mappers;
 using JobAutofill.App.Pages;
 using JobAutofill.App.Services;
 using JobAutofill.App.ViewModels;
-using JobAutofill.Infrastructure;
 using JobAutofill.Infrastructure.Persistence;
 using JobAutofill.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,21 +40,21 @@ public static class MauiProgram
         });
 #endif
 
-        builder.Services.AddJobAutofillInfrastructure();
         builder.Services.AddSingleton<IProfileRepository, ProfileRepository>();
-        builder.Services.AddSingleton<IJobCatalog, SampleJobCatalog>();
+#if DEMO
+        builder.Services.AddSingleton<IJobCatalog, DemoJobCatalog>();
+#endif
         builder.Services.AddSingleton<IJobApplicationUrlResolver, JobApplicationUrlResolver>();
         builder.Services.AddSingleton<IJobBrowserStatusService, JobBrowserStatusService>();
-        builder.Services.AddSingleton<ITelemetryService, TelemetryService>();
+        builder.Services.AddSingleton<ITelemetryService, NullTelemetryService>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddTransient<IJobBrowserViewModel, JobBrowserViewModel>();
         builder.Services.AddTransient<IProfileEditorViewModel, ProfileEditorViewModel>();
         builder.Services.AddSingleton<IDetectedFieldViewModelMapper, DetectedFieldViewModelMapper>();
-        builder.Services.AddSingleton<LocalProfileFieldMatcher>();
-        builder.Services.AddSingleton<DetectedFieldNormalizer>();
-        builder.Services.AddSingleton<FillCommandPlanner>();
-        builder.Services.AddSingleton<FieldApprovalWorkflow>();
-        builder.Services.AddSingleton<AutofillWorkflow>();
+        builder.Services.AddSingleton<FieldConsolidator>();
+        builder.Services.AddSingleton<ProfileProposalMatcher>();
+        builder.Services.AddSingleton<FieldPolicyEvaluator>();
+        builder.Services.AddSingleton<ApplicationFieldPipeline>();
         builder.Services.AddSingleton<IJobBrowserWorkflowService, JobBrowserWorkflowService>();
         builder.Services.AddSingleton<IJobBrowserPageServiceFactory, JobBrowserPageServiceFactory>();
         builder.Services.AddSingleton<AppShell>();

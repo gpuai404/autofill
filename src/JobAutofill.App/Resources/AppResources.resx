@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c2e1d0d3d3d</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c2e1d0d3d3d</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve"><value>Job Autofill</value></data>
+  <data name="JobsTabTitle" xml:space="preserve"><value>Jobs</value></data>
+  <data name="ProfileTabTitle" xml:space="preserve"><value>Profile</value></data>
+  <data name="AutofillPageTitle" xml:space="preserve"><value>Autofill</value></data>
+  <data name="ScanAction" xml:space="preserve"><value>Scan</value></data>
+  <data name="FillAction" xml:space="preserve"><value>Fill</value></data>
+  <data name="DebugAction" xml:space="preserve"><value>Debug</value></data>
+  <data name="DetectedFieldsTitle" xml:space="preserve"><value>Detected fields</value></data>
+  <data name="ScanHint" xml:space="preserve"><value>Scan opens detected fields here.</value></data>
+  <data name="JobsPageTitle" xml:space="preserve"><value>Jobs</value></data>
+  <data name="PasteJobUrlPlaceholder" xml:space="preserve"><value>Paste job URL</value></data>
+  <data name="OpenAction" xml:space="preserve"><value>Open</value></data>
+  <data name="NoJobsAvailable" xml:space="preserve"><value>No jobs available.</value></data>
+  <data name="ProfilePageTitle" xml:space="preserve"><value>Profile</value></data>
+  <data name="EditAction" xml:space="preserve"><value>Edit</value></data>
+  <data name="ContactTitle" xml:space="preserve"><value>Contact</value></data>
+  <data name="OnlineProfilesTitle" xml:space="preserve"><value>Online profiles</value></data>
+  <data name="ResumeTitle" xml:space="preserve"><value>Resume</value></data>
+  <data name="EligibilityTitle" xml:space="preserve"><value>Eligibility</value></data>
+  <data name="VoluntaryDisclosuresTitle" xml:space="preserve"><value>Voluntary disclosures</value></data>
+  <data name="AtsAnswersTitle" xml:space="preserve"><value>ATS answers</value></data>
+  <data name="RequiresSponsorship" xml:space="preserve"><value>Requires sponsorship</value></data>
+  <data name="WillingToRelocate" xml:space="preserve"><value>Willing to relocate</value></data>
+  <data name="FullName" xml:space="preserve"><value>Full name</value></data>
+  <data name="Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Address" xml:space="preserve"><value>Address</value></data>
+  <data name="City" xml:space="preserve"><value>City</value></data>
+  <data name="State" xml:space="preserve"><value>State</value></data>
+  <data name="PostalCode" xml:space="preserve"><value>Postal code</value></data>
+  <data name="Country" xml:space="preserve"><value>Country</value></data>
+  <data name="LinkedInUrl" xml:space="preserve"><value>LinkedIn URL</value></data>
+  <data name="PortfolioUrl" xml:space="preserve"><value>Portfolio URL</value></data>
+  <data name="GitHubUrl" xml:space="preserve"><value>GitHub URL</value></data>
+  <data name="CurrentTitle" xml:space="preserve"><value>Current title</value></data>
+  <data name="CurrentCompany" xml:space="preserve"><value>Current company</value></data>
+  <data name="YearsOfExperience" xml:space="preserve"><value>Years of experience</value></data>
+  <data name="HighestEducation" xml:space="preserve"><value>Highest education</value></data>
+  <data name="ResumeFileName" xml:space="preserve"><value>Resume file name</value></data>
+  <data name="Skills" xml:space="preserve"><value>Skills</value></data>
+  <data name="ResumeSummary" xml:space="preserve"><value>Resume summary</value></data>
+  <data name="WorkAuthorization" xml:space="preserve"><value>Work authorization</value></data>
+  <data name="PreferredWorkType" xml:space="preserve"><value>Preferred work type</value></data>
+  <data name="SalaryExpectation" xml:space="preserve"><value>Salary expectation</value></data>
+  <data name="NoticePeriod" xml:space="preserve"><value>Notice period</value></data>
+  <data name="Gender" xml:space="preserve"><value>Gender</value></data>
+  <data name="RaceOrEthnicity" xml:space="preserve"><value>Race or ethnicity</value></data>
+  <data name="HispanicOrLatino" xml:space="preserve"><value>Hispanic or Latino</value></data>
+  <data name="VeteranStatus" xml:space="preserve"><value>Veteran status</value></data>
+  <data name="DisabilityStatus" xml:space="preserve"><value>Disability status</value></data>
+  <data name="CoverLetterAnswer" xml:space="preserve"><value>Cover letter answer</value></data>
+  <data name="WhyInterested" xml:space="preserve"><value>Why are you interested?</value></data>
+  <data name="AdditionalInformation" xml:space="preserve"><value>Additional information</value></data>
+</root>

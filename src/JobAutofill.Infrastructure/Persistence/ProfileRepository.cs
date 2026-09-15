@@ -23,8 +23,6 @@ public sealed class ProfileRepository : IProfileRepository
 
     public ProfileRepository(string databasePath)
     {
-        SQLitePCL.Batteries_V2.Init();
-
         var directory = Path.GetDirectoryName(databasePath);
         if (!string.IsNullOrWhiteSpace(directory))
         {
@@ -34,16 +32,14 @@ public sealed class ProfileRepository : IProfileRepository
         _database = new SQLiteAsyncConnection(databasePath);
     }
 
-    public async Task<Profile> GetCurrentAsync(CancellationToken cancellationToken = default)
+    public async Task<Profile?> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
         await InitializeAsync(cancellationToken);
 
         var current = await _database.FindAsync<ProfileStateEntity>(CurrentProfileKey);
         if (current is null)
         {
-            var seededProfile = DummyProfileSeed.Create();
-            await SaveAsync(seededProfile, cancellationToken);
-            return seededProfile;
+            return null;
         }
 
         if (Guid.TryParse(current.ProfileId, out var currentProfileId))
@@ -55,9 +51,7 @@ public sealed class ProfileRepository : IProfileRepository
             }
         }
 
-        var replacementProfile = DummyProfileSeed.Create();
-        await SaveAsync(replacementProfile, cancellationToken);
-        return replacementProfile;
+        return null;
     }
 
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken = default)

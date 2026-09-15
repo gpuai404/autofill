@@ -3,6 +3,7 @@ using JobAutofill.App.Models.WebView;
 using JobAutofill.App.ViewModels;
 using JobAutofill.App.WebView;
 using JobAutofill.Core.Contracts;
+using JobAutofill.Domain.Models;
 using System.Text.Json;
 
 namespace JobAutofill.App.Services;
@@ -49,18 +50,24 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
             _lastScanRawResult = scanResult.RawResult;
             _lastScanCapability = scanResult.Capability;
 
+            var profile = await _profileRepository.GetCurrentAsync();
+            if (profile is null)
+            {
+                _viewModel.SetStatus("Create your profile before scanning job applications.");
+                return;
+            }
+
             var preparedFields = await _workflowService.PrepareDetectedFieldsAsync(
                 pageUrl,
+                await _webViewBridge.GetCurrentPageLanguageAsync(),
                 scanResult.Fields,
                 _lastScanCapability,
-                await _profileRepository.GetCurrentAsync());
+                profile);
             _viewModel.ReplaceDetectedFields(preparedFields);
 
-            var fillableCount = _viewModel.DetectedFields.Count(field => field.CanApprove || field.CanAutoFill);
-            var approvedCount = _viewModel.DetectedFields.Count(field => field.CanAutoFill);
-            var apiDecisionCount = _viewModel.DetectedFields.Count(field => field.NeedsApiDecision);
-            var blockedCount = _viewModel.DetectedFields.Count(field => field.IsBlocked);
-            var optionsCapturedCount = _viewModel.DetectedFields.Count(field => field.HasOptions);
+            var readyCount = _viewModel.DetectedFields.Count(field => field.CanAutoFill);
+            var attentionCount = _viewModel.DetectedFields.Count(field => field.NeedsAttention);
+            var manualCount = _viewModel.DetectedFields.Count(field => field.IsManual);
 
             var noFieldsHint = _lastScanCapability.IsHardStop
                 ? _lastScanCapability.Message
@@ -68,11 +75,9 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
 
             _viewModel.SetStatus(_statusService.BuildScanStatusText(
                 _viewModel.DetectedFields.Count,
-                optionsCapturedCount,
-                fillableCount,
-                approvedCount,
-                apiDecisionCount,
-                blockedCount,
+                readyCount,
+                attentionCount,
+                manualCount,
                 _lastScanCapability,
                 noFieldsHint));
         }
@@ -96,27 +101,41 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
 
             foreach (var command in fillCommands)
             {
-                var fillResult = await _webViewBridge.FillAsync(command);
-                if (fillResult.Ok)
+                var field = _viewModel.DetectedFields.First(item => item.State.Field.FieldId == command.FieldId);
+                field.MarkFilling();
+                try
                 {
-                    filledCount++;
+                    var fillResult = await _webViewBridge.FillAsync(command);
+                    field.ApplyFillResult(new FieldFillResult(
+                        command.FieldId,
+                        fillResult.Ok ? FieldExecutionState.Filled : FieldExecutionState.Failed,
+                        command.Value,
+                        fillResult.ObservedValue,
+                        fillResult.Message,
+                        CanRetry: !fillResult.Ok));
+                    if (fillResult.Ok) filledCount++;
+                    else skippedCount++;
                 }
-                else
+                catch (Exception ex)
                 {
                     skippedCount++;
+                    field.ApplyFillResult(new FieldFillResult(
+                        command.FieldId,
+                        FieldExecutionState.Failed,
+                        command.Value,
+                        null,
+                        FirstLine(ex.Message),
+                        CanRetry: true));
                 }
             }
 
-            var pendingApiCount = _viewModel.DetectedFields.Count(field => field.NeedsApiDecision);
-            var blockedCount = _viewModel.DetectedFields.Count(field => field.IsBlocked);
-            var readyButUnapprovedCount = _viewModel.DetectedFields.Count(field => field.CanApprove);
+            var attentionCount = _viewModel.DetectedFields.Count(field => field.NeedsAttention);
+            var manualCount = _viewModel.DetectedFields.Count(field => field.IsManual && !field.IsCompleted);
 
             _viewModel.SetStatus(skippedCount > 0
                 ? $"Filled {filledCount} fields. {skippedCount} not ready."
-                : readyButUnapprovedCount > 0
-                    ? $"Filled {filledCount} approved fields. {readyButUnapprovedCount} still need approval."
-                : pendingApiCount + blockedCount > 0
-                    ? $"Filled {filledCount} fields. {pendingApiCount} need API, {blockedCount} blocked."
+                : attentionCount + manualCount > 0
+                    ? $"Filled {filledCount} fields. {attentionCount} need attention, {manualCount} manual."
                 : filledCount == 1
                     ? "Filled 1 field."
                     : $"Filled {filledCount} fields.");
@@ -132,9 +151,9 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
     {
         try
         {
-            field.Approve();
+            field.Confirm();
             await _webViewBridge.FocusFieldAsync(_detectedFieldViewModelMapper.ToDomainModel(field));
-            _viewModel.SetStatus($"Approved {field.Label ?? field.Selector}.");
+            _viewModel.SetStatus($"Confirmed {field.Label}.");
         }
         catch (Exception ex)
         {
@@ -151,16 +170,15 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
 
             if (field.CanAutoFill)
             {
-                _viewModel.SetStatus($"Focused {field.Label ?? field.Selector}. Use Fill to apply approved fields.");
+                _viewModel.SetStatus($"Focused {field.Label}. Use Fill to apply ready fields.");
                 return;
             }
 
-            await CopyDebugJsonAsync(field.ToDebugObject());
             _viewModel.SetStatus(field.CanApprove
-                ? $"Focused {field.Label ?? field.Selector}. Approve it before filling."
-                : field.NeedsApiDecision
-                ? $"Focused {field.Label ?? field.Selector}. Needs API decision; debug copied."
-                : $"Focused {field.Label ?? field.Selector}. Blocked; debug copied.");
+                ? $"Focused {field.Label}. Confirm the suggestion before filling."
+                : field.IsManual
+                    ? $"Focused {field.Label}. Complete this field manually."
+                    : $"Focused {field.Label}. Add an answer before filling.");
         }
         catch (Exception ex)
         {
@@ -208,23 +226,12 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
 
         try
         {
-            if (field.IsMultipleSelection)
-            {
-                if (!field.MatchedOptions.Contains(option))
-                {
-                    field.MatchedOptions.Add(option);
-                }
-
-                field.ValueToFill = string.Join(", ", field.MatchedOptions.Select(match => match.FillValue));
-                field.ApproveSelectedOptions();
-            }
-            else
-            {
-                field.SetExplicitSelection(option);
-            }
+            field.SelectOption(option);
 
             await _webViewBridge.FocusFieldAsync(_detectedFieldViewModelMapper.ToDomainModel(field));
-            _viewModel.SetStatus($"Approved {option.DisplayText} for {field.Label ?? field.Selector}.");
+            _viewModel.SetStatus(field.IsMultipleSelection
+                ? $"Updated choices for {field.Label}. Confirm when finished."
+                : $"Selected {option.DisplayText} for {field.Label}.");
         }
         catch (Exception ex)
         {

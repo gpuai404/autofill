@@ -145,7 +145,12 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
 
     public async Task LoadProfileAsync(CancellationToken cancellationToken = default)
     {
-        _profile = await _profileRepository.GetCurrentAsync(cancellationToken);
+        _profile = await _profileRepository.GetCurrentAsync(cancellationToken) ?? new Profile();
+        if (string.IsNullOrWhiteSpace(_profile.FullName) && string.IsNullOrWhiteSpace(_profile.Email))
+        {
+            SetEditing(true);
+            StatusText = "Create your profile before scanning job applications.";
+        }
 
         FullName = _profile.FullName;
         Email = _profile.Email;
@@ -185,7 +190,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
 
     public async Task SaveProfileAsync(CancellationToken cancellationToken = default)
     {
-        _profile ??= await _profileRepository.GetCurrentAsync(cancellationToken);
+        _profile ??= await _profileRepository.GetCurrentAsync(cancellationToken) ?? new Profile();
 
         _profile.FullName = FullName;
         _profile.Email = Email;

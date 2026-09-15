@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:app="clr-namespace:JobAutofill.App"
              xmlns:vm="clr-namespace:JobAutofill.App.ViewModels"
              x:Class="JobAutofill.App.Pages.ProfileEditorPage"
              x:DataType="vm:ProfileEditorViewModel"
-             Title="Profile">
+             Title="{x:Static app:AppLocalizer.ProfilePageTitle}">
     <Grid Padding="16"
           RowDefinitions="Auto,*"
           RowSpacing="12">
@@ -23,7 +24,7 @@
             </VerticalStackLayout>
             <Button x:Name="EditSaveButton"
                     Grid.Column="1"
-                    Text="Edit"
+                    Text="{x:Static app:AppLocalizer.EditAction}"
                     Clicked="OnEditSaveClicked" />
         </Grid>
 
@@ -37,41 +38,41 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Contact"
+                        <Label Text="{x:Static app:AppLocalizer.ContactTitle}"
                                FontAttributes="Bold" />
                         <Entry x:Name="FullNameEntry"
                                Text="{Binding FullName}"
-                               Placeholder="Full name" />
+                               Placeholder="{x:Static app:AppLocalizer.FullName}" />
                         <Entry x:Name="EmailEntry"
                                Text="{Binding Email}"
-                               Placeholder="Email"
+                               Placeholder="{x:Static app:AppLocalizer.Email}"
                                Keyboard="Email" />
                         <Entry x:Name="PhoneEntry"
                                Text="{Binding Phone}"
-                               Placeholder="Phone"
+                               Placeholder="{x:Static app:AppLocalizer.Phone}"
                                Keyboard="Telephone" />
                         <Entry x:Name="AddressEntry"
                                Text="{Binding AddressLine1}"
-                               Placeholder="Address" />
+                               Placeholder="{x:Static app:AppLocalizer.Address}" />
                         <Grid ColumnDefinitions="*,*"
                               ColumnSpacing="10">
                             <Entry x:Name="CityEntry"
                                    Text="{Binding City}"
-                                   Placeholder="City" />
+                                   Placeholder="{x:Static app:AppLocalizer.City}" />
                             <Entry x:Name="StateEntry"
                                    Text="{Binding StateOrProvince}"
                                    Grid.Column="1"
-                                   Placeholder="State" />
+                                   Placeholder="{x:Static app:AppLocalizer.State}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,*"
                               ColumnSpacing="10">
                             <Entry x:Name="PostalCodeEntry"
                                    Text="{Binding PostalCode}"
-                                   Placeholder="Postal code" />
+                                   Placeholder="{x:Static app:AppLocalizer.PostalCode}" />
                             <Entry x:Name="CountryEntry"
                                    Text="{Binding Country}"
                                    Grid.Column="1"
-                                   Placeholder="Country" />
+                                   Placeholder="{x:Static app:AppLocalizer.Country}" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
@@ -84,19 +85,19 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Online profiles"
+                        <Label Text="{x:Static app:AppLocalizer.OnlineProfilesTitle}"
                                FontAttributes="Bold" />
                         <Entry x:Name="LinkedInEntry"
                                Text="{Binding LinkedInUrl}"
-                               Placeholder="LinkedIn URL"
+                               Placeholder="{x:Static app:AppLocalizer.LinkedInUrl}"
                                Keyboard="Url" />
                         <Entry x:Name="PortfolioEntry"
                                Text="{Binding PortfolioUrl}"
-                               Placeholder="Portfolio URL"
+                               Placeholder="{x:Static app:AppLocalizer.PortfolioUrl}"
                                Keyboard="Url" />
                         <Entry x:Name="GitHubEntry"
                                Text="{Binding GitHubUrl}"
-                               Placeholder="GitHub URL"
+                               Placeholder="{x:Static app:AppLocalizer.GitHubUrl}"
                                Keyboard="Url" />
                     </VerticalStackLayout>
                 </Border>
@@ -109,32 +110,32 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Resume"
+                        <Label Text="{x:Static app:AppLocalizer.ResumeTitle}"
                                FontAttributes="Bold" />
                         <Entry x:Name="CurrentTitleEntry"
                                Text="{Binding CurrentTitle}"
-                               Placeholder="Current title" />
+                               Placeholder="{x:Static app:AppLocalizer.CurrentTitle}" />
                         <Entry x:Name="CurrentCompanyEntry"
                                Text="{Binding CurrentCompany}"
-                               Placeholder="Current company" />
+                               Placeholder="{x:Static app:AppLocalizer.CurrentCompany}" />
                         <Entry x:Name="YearsExperienceEntry"
                                Text="{Binding YearsExperience}"
-                               Placeholder="Years of experience"
+                               Placeholder="{x:Static app:AppLocalizer.YearsOfExperience}"
                                Keyboard="Numeric" />
                         <Entry x:Name="HighestEducationEntry"
                                Text="{Binding HighestEducation}"
-                               Placeholder="Highest education" />
+                               Placeholder="{x:Static app:AppLocalizer.HighestEducation}" />
                         <Entry x:Name="ResumeFileNameEntry"
                                Text="{Binding ResumeFileName}"
-                               Placeholder="Resume file name" />
+                               Placeholder="{x:Static app:AppLocalizer.ResumeFileName}" />
                         <Editor x:Name="SkillsEditor"
                                 Text="{Binding Skills}"
-                                Placeholder="Skills"
+                                Placeholder="{x:Static app:AppLocalizer.Skills}"
                                 AutoSize="TextChanges"
                                 HeightRequest="96" />
                         <Editor x:Name="SummaryEditor"
                                 Text="{Binding ResumeSummary}"
-                                Placeholder="Resume summary"
+                                Placeholder="{x:Static app:AppLocalizer.ResumeSummary}"
                                 AutoSize="TextChanges"
                                 HeightRequest="132" />
                     </VerticalStackLayout>
@@ -148,14 +149,14 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Eligibility"
+                        <Label Text="{x:Static app:AppLocalizer.EligibilityTitle}"
                                FontAttributes="Bold" />
                         <Entry x:Name="WorkAuthorizationEntry"
                                Text="{Binding WorkAuthorizationStatus}"
-                               Placeholder="Work authorization" />
+                               Placeholder="{x:Static app:AppLocalizer.WorkAuthorization}" />
                         <Grid ColumnDefinitions="*,Auto"
                               ColumnSpacing="12">
-                            <Label Text="Requires sponsorship"
+                            <Label Text="{x:Static app:AppLocalizer.RequiresSponsorship}"
                                    VerticalTextAlignment="Center" />
                             <Switch x:Name="SponsorshipSwitch"
                                     IsToggled="{Binding RequiresSponsorship}"
@@ -163,7 +164,7 @@
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto"
                               ColumnSpacing="12">
-                            <Label Text="Willing to relocate"
+                            <Label Text="{x:Static app:AppLocalizer.WillingToRelocate}"
                                    VerticalTextAlignment="Center" />
                             <Switch x:Name="RelocateSwitch"
                                     IsToggled="{Binding WillingToRelocate}"
@@ -171,13 +172,13 @@
                         </Grid>
                         <Entry x:Name="PreferredWorkTypeEntry"
                                Text="{Binding PreferredWorkType}"
-                               Placeholder="Preferred work type" />
+                               Placeholder="{x:Static app:AppLocalizer.PreferredWorkType}" />
                         <Entry x:Name="SalaryExpectationEntry"
                                Text="{Binding SalaryExpectation}"
-                               Placeholder="Salary expectation" />
+                               Placeholder="{x:Static app:AppLocalizer.SalaryExpectation}" />
                         <Entry x:Name="NoticePeriodEntry"
                                Text="{Binding NoticePeriod}"
-                               Placeholder="Notice period" />
+                               Placeholder="{x:Static app:AppLocalizer.NoticePeriod}" />
                     </VerticalStackLayout>
                 </Border>
 
@@ -189,23 +190,23 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="Voluntary disclosures"
+                        <Label Text="{x:Static app:AppLocalizer.VoluntaryDisclosuresTitle}"
                                FontAttributes="Bold" />
                         <Entry x:Name="GenderEntry"
                                Text="{Binding Gender}"
-                               Placeholder="Gender" />
+                               Placeholder="{x:Static app:AppLocalizer.Gender}" />
                         <Entry x:Name="RaceEntry"
                                Text="{Binding RaceEthnicity}"
-                               Placeholder="Race or ethnicity" />
+                               Placeholder="{x:Static app:AppLocalizer.RaceOrEthnicity}" />
                         <Entry x:Name="HispanicLatinoEntry"
                                Text="{Binding HispanicLatino}"
-                               Placeholder="Hispanic or Latino" />
+                               Placeholder="{x:Static app:AppLocalizer.HispanicOrLatino}" />
                         <Entry x:Name="VeteranEntry"
                                Text="{Binding VeteranStatus}"
-                               Placeholder="Veteran status" />
+                               Placeholder="{x:Static app:AppLocalizer.VeteranStatus}" />
                         <Entry x:Name="DisabilityEntry"
                                Text="{Binding DisabilityStatus}"
-                               Placeholder="Disability status" />
+                               Placeholder="{x:Static app:AppLocalizer.DisabilityStatus}" />
                     </VerticalStackLayout>
                 </Border>
 
@@ -217,21 +218,21 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="ATS answers"
+                        <Label Text="{x:Static app:AppLocalizer.AtsAnswersTitle}"
                                FontAttributes="Bold" />
                         <Editor x:Name="CoverLetterEditor"
                                 Text="{Binding CoverLetter}"
-                                Placeholder="Cover letter answer"
+                                Placeholder="{x:Static app:AppLocalizer.CoverLetterAnswer}"
                                 AutoSize="TextChanges"
                                 HeightRequest="120" />
                         <Editor x:Name="WhyInterestedEditor"
                                 Text="{Binding WhyInterested}"
-                                Placeholder="Why are you interested?"
+                                Placeholder="{x:Static app:AppLocalizer.WhyInterested}"
                                 AutoSize="TextChanges"
                                 HeightRequest="110" />
                         <Editor x:Name="AdditionalInfoEditor"
                                 Text="{Binding AdditionalInfo}"
-                                Placeholder="Additional information"
+                                Placeholder="{x:Static app:AppLocalizer.AdditionalInformation}"
                                 AutoSize="TextChanges"
                                 HeightRequest="110" />
                     </VerticalStackLayout>

@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobAutofill.Infrastructure"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobAutofill.Telemetry", "JobAutofill.Telemetry/JobAutofill.Telemetry.csproj", "{80D67FBE-345E-418A-8114-3738A470F6AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobAutofill.Core.Tests", "../tests/JobAutofill.Core.Tests/JobAutofill.Core.Tests.csproj", "{A4166A70-E647-46F4-9537-1A9B156D794D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{80D67FBE-345E-418A-8114-3738A470F6AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80D67FBE-345E-418A-8114-3738A470F6AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80D67FBE-345E-418A-8114-3738A470F6AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4166A70-E647-46F4-9537-1A9B156D794D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4166A70-E647-46F4-9537-1A9B156D794D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4166A70-E647-46F4-9537-1A9B156D794D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4166A70-E647-46F4-9537-1A9B156D794D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

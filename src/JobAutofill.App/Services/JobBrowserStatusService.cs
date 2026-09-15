@@ -7,11 +7,9 @@ public sealed class JobBrowserStatusService : IJobBrowserStatusService
 {
     public string BuildScanStatusText(
         int detectedCount,
-        int optionsCapturedCount,
-        int fillableCount,
-        int approvedCount,
-        int apiDecisionCount,
-        int blockedCount,
+        int readyCount,
+        int attentionCount,
+        int manualCount,
         WebViewCapabilityResult capability,
         string? noFieldsHint)
     {
@@ -21,15 +19,15 @@ public sealed class JobBrowserStatusService : IJobBrowserStatusService
                 ? capability.Message
                 : noFieldsHint ?? "This page does not expose standard form fields in the current runtime state.";
 
-            return $"No fields detected. {pageHint} Tap Debug to see diagnostics.";
+            return $"No application fields found. {pageHint}";
         }
 
         if (capability.IsPartialScan)
         {
-            return $"Found {detectedCount} fields, {optionsCapturedCount} with options, {fillableCount} ready, {approvedCount} approved, {apiDecisionCount} need API, {blockedCount} blocked. Partial scan: {capability.Message}";
+            return $"Found {detectedCount} fields: {readyCount} ready, {attentionCount} need attention, {manualCount} manual. Partial scan: {capability.Message}";
         }
 
-        return $"Found {detectedCount} fields, {optionsCapturedCount} with options, {fillableCount} ready, {approvedCount} approved, {apiDecisionCount} need API, {blockedCount} blocked.";
+        return $"Found {detectedCount} fields: {readyCount} ready, {attentionCount} need attention, {manualCount} manual.";
     }
 
     public async Task<string> GetNoFieldsHintAsync(IJobWebViewBridge webViewBridge)
@@ -38,8 +36,8 @@ public sealed class JobBrowserStatusService : IJobBrowserStatusService
         return pageClassification switch
         {
             "auth-gated" => "This page is login-gated or requires auth before form fields are exposed.",
-            "iframe-based" => "This page appears to use iframe-based content and is not supported in Tier 1.",
-            "custom-app-shell" => "This page appears to use a custom app shell or non-standard form implementation.",
+            "iframe-based" => "The application is embedded in a protected frame that this app cannot access.",
+            "custom-app-shell" => "The application uses controls that cannot be scanned safely on this page.",
             _ => "This page does not expose standard form fields in the current runtime state."
         };
     }

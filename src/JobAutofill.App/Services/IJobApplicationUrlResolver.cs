@@ -2,5 +2,17 @@ namespace JobAutofill.App.Services;
 
 public interface IJobApplicationUrlResolver
 {
-    string ResolveScannableUrl(string url);
+    ResolvedJobSite Resolve(string url);
+}
+
+public sealed record ResolvedJobSite(
+    string SiteId,
+    string ScannableUrl,
+    string RulesAssetName,
+    SiteAdapterMode AdapterMode);
+
+public enum SiteAdapterMode
+{
+    Generic,
+    Verified
 }

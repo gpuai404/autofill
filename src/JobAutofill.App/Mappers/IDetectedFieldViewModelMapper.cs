@@ -5,7 +5,7 @@ namespace JobAutofill.App.Mappers;
 
 public interface IDetectedFieldViewModelMapper
 {
-    DetectedFieldViewModel ToViewModel(DetectedField field);
+    DetectedFieldViewModel ToViewModel(ApplicationFieldState field);
     DetectedField ToDomainModel(DetectedFieldViewModel field);
-    ApprovalItem ToApprovedApprovalItem(DetectedFieldViewModel field);
+    FillCommand ToFillCommand(DetectedFieldViewModel field);
 }

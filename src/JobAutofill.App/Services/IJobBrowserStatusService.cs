@@ -7,11 +7,9 @@ public interface IJobBrowserStatusService
 {
     string BuildScanStatusText(
         int detectedCount,
-        int optionsCapturedCount,
-        int fillableCount,
-        int approvedCount,
-        int apiDecisionCount,
-        int blockedCount,
+        int readyCount,
+        int attentionCount,
+        int manualCount,
         WebViewCapabilityResult capability,
         string? noFieldsHint);
 

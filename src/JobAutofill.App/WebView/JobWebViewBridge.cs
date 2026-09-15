@@ -1,5 +1,6 @@
 using JobAutofill.App.Models.WebView;
 using JobAutofill.Domain.Models;
+using JobAutofill.App.Services;
 using Microsoft.Maui.Controls;
 using System.Text;
 using System.Text.Json;
@@ -23,7 +24,7 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
         "shared/dom-traversal.js",
         "shared/selector-resolver.js",
         "webview/bridge-runtime.js",
-        // Metadata: built-in generic rules (site-specific metadata is provided by C# at runtime, not bundled in APK)
+        // Generic metadata policy. The C# site registry selects the ATS rule asset separately.
         GenericRulesAssetName,
         "metadata/metadata-resolver.js",
         // Generic engine modules
@@ -50,6 +51,8 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
     private bool _domSharedInjected;
     private bool _detectorInjected;
     private bool _fillScriptInjected;
+    private ResolvedJobSite _site = new("unknown", string.Empty, "site-rules/default.js", SiteAdapterMode.Generic);
+    private bool _enableDiagnostics;
 
     public JobWebViewBridge(Microsoft.Maui.Controls.WebView webView)
     {
@@ -63,6 +66,21 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
         _fillScriptInjected = false;
     }
 
+    public void ConfigureSite(ResolvedJobSite site, bool enableDiagnostics)
+    {
+        ArgumentNullException.ThrowIfNull(site);
+        if (_site == site && _enableDiagnostics == enableDiagnostics)
+        {
+            return;
+        }
+
+        _site = site;
+        _enableDiagnostics = enableDiagnostics;
+        _detectorScript = null;
+        _fillScript = null;
+        ResetInjectedState();
+    }
+
     public async Task EnsureDetectorInjectedAsync()
     {
         if (_detectorInjected)
@@ -72,7 +90,7 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
 
         await EnsureDomSharedInjectedAsync();
 
-        _detectorScript ??= await LoadAndroidAssetsAsync(DetectorAssetNames);
+        _detectorScript ??= await BuildDetectorScriptAsync();
         if (string.IsNullOrWhiteSpace(_detectorScript))
         {
             throw new InvalidOperationException("The scanner scripts were not packaged with the app.");
@@ -169,6 +187,36 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
         }
 
         return "unsupported";
+    }
+
+    public async Task<string> GetCurrentPageLanguageAsync()
+    {
+        try
+        {
+            var rawLanguage = await _webView.EvaluateJavaScriptAsync(@"(() => {
+                const html = document.documentElement || document.body || {};
+                const lang = (html.lang || (html.getAttribute && html.getAttribute('lang')) || '').toString().trim();
+                if (lang) return lang;
+                const meta = document.querySelector(""meta[http-equiv='content-language'], meta[name='language'], meta[property='og:locale']"");
+                if (meta) {
+                    const content = (meta.getAttribute('content') || meta.getAttribute('lang') || '').toString().trim();
+                    if (content) return content;
+                }
+                return navigator.language || 'en';
+            })();");
+
+            var normalized = NormalizeJavaScriptJsonResult(rawLanguage);
+            if (string.IsNullOrWhiteSpace(normalized) || normalized == "null" || normalized == "undefined")
+            {
+                return "en";
+            }
+
+            return normalized.Trim().Trim('"');
+        }
+        catch
+        {
+            return "en";
+        }
     }
 
     private async Task<WebViewCapabilityResult> GetScanCapabilityAsync()
@@ -282,14 +330,18 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
 
         if (_fillScript == null)
         {
+            var runtimeConfiguration = BuildRuntimeConfigurationScript();
+            var siteRuleRuntime = await LoadAndroidAssetAsync("site-rules/runtime.js");
+            var knownWidgetsScript = await LoadAndroidAssetAsync("site-rules/known-widget-libraries.js");
+            var siteRulesScript = await LoadAndroidAssetAsync(_site.RulesAssetName);
             var optionHandlingScript = await LoadAndroidAssetAsync("generic-engine/option-handling.js");
             var fillScript = await LoadAndroidAssetAsync("filler/fill.js");
-            if (string.IsNullOrWhiteSpace(optionHandlingScript) || string.IsNullOrWhiteSpace(fillScript))
+            if (string.IsNullOrWhiteSpace(siteRulesScript) || string.IsNullOrWhiteSpace(optionHandlingScript) || string.IsNullOrWhiteSpace(fillScript))
             {
                 throw new InvalidOperationException("option-handling.js or fill.js was not packaged with the app.");
             }
 
-            _fillScript = optionHandlingScript + "\n" + fillScript;
+            _fillScript = runtimeConfiguration + "\n" + siteRuleRuntime + "\n" + knownWidgetsScript + "\n" + siteRulesScript + "\n" + optionHandlingScript + "\n" + fillScript;
         }
 
         await _webView.EvaluateJavaScriptAsync(_fillScript);
@@ -354,6 +406,32 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
         }
 
         return scripts.ToString();
+    }
+
+    private async Task<string> BuildDetectorScriptAsync()
+    {
+        var shared = await LoadAndroidAssetsAsync(DetectorAssetNames);
+        var siteRuleRuntime = await LoadAndroidAssetAsync("site-rules/runtime.js");
+        var knownWidgets = await LoadAndroidAssetAsync("site-rules/known-widget-libraries.js");
+        var siteRules = await LoadAndroidAssetAsync(_site.RulesAssetName);
+        if (string.IsNullOrWhiteSpace(siteRules))
+        {
+            throw new InvalidOperationException($"{_site.RulesAssetName} was not packaged with the app.");
+        }
+
+        return BuildRuntimeConfigurationScript() + "\n" + siteRuleRuntime + "\n" + knownWidgets + "\n" + siteRules + "\n" + shared;
+    }
+
+    private string BuildRuntimeConfigurationScript()
+    {
+        var configuration = JsonSerializer.Serialize(new
+        {
+            siteId = _site.SiteId,
+            adapterMode = _site.AdapterMode == SiteAdapterMode.Verified ? "verified" : "generic",
+            enableDiagnostics = _enableDiagnostics,
+            captureClosedShadowRoots = true
+        });
+        return $"window.__jobAutofillConfig = {configuration};";
     }
 
     private async Task<JavaScriptOperationState> WaitForJavaScriptOperationAsync(
@@ -467,67 +545,12 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
                 return new WebViewOptionExtractionResult(false, result.Message ?? "Options were not captured.", [], result.OptionsTruncated);
             }
 
-            var ownership = ValidateOptionOwnership(field, result.Options);
-            if (!ownership.IsValid)
-            {
-                return new WebViewOptionExtractionResult(false, ownership.Message, [], result.OptionsTruncated);
-            }
-
             return new WebViewOptionExtractionResult(true, result.Message ?? "Options extracted.", result.Options, result.OptionsTruncated);
         }
         catch (JsonException ex)
         {
             return new WebViewOptionExtractionResult(false, $"Could not parse option extraction result: {ex.Message}. Raw: {json}", [], false);
         }
-    }
-
-    private static (bool IsValid, string Message) ValidateOptionOwnership(
-        DetectedField field,
-        IReadOnlyList<DetectedFieldOption> options)
-    {
-        if (options.Count == 0)
-        {
-            return (true, "No options returned.");
-        }
-
-        var fieldId = ReactSelectFieldIdFromSelector(field.Selector);
-        if (string.IsNullOrWhiteSpace(fieldId))
-        {
-            return (true, "No field ownership marker available.");
-        }
-
-        var expectedPrefix = $"#react-select-{fieldId}-option-";
-        var reactSelectOptions = options
-            .Where(option => !string.IsNullOrWhiteSpace(option.Selector) &&
-                             option.Selector.Contains("#react-select-", StringComparison.Ordinal))
-            .ToList();
-
-        if (reactSelectOptions.Count == 0)
-        {
-            return (true, "No React Select option ownership marker available.");
-        }
-
-        var foreignOption = reactSelectOptions.FirstOrDefault(option =>
-            !option.Selector!.StartsWith(expectedPrefix, StringComparison.Ordinal));
-
-        if (foreignOption is null)
-        {
-            return (true, "Options belong to this field.");
-        }
-
-        return (false,
-            $"Discarded options for {field.Label ?? field.Selector}: option selector {foreignOption.Selector} does not belong to field {field.Selector}.");
-    }
-
-    private static string? ReactSelectFieldIdFromSelector(string? selector)
-    {
-        if (string.IsNullOrWhiteSpace(selector) || !selector.StartsWith("#", StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        var id = selector[1..];
-        return string.IsNullOrWhiteSpace(id) ? null : id;
     }
 
     private static string? GetString(JsonElement element, string propertyName)
@@ -548,9 +571,14 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
 
         try
         {
-            return JsonSerializer.Deserialize<WebViewFillResult>(
-                json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new WebViewFillResult(false, "Empty fill result.");
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var ok = root.TryGetProperty("ok", out var okElement) && okElement.ValueKind == JsonValueKind.True;
+            var message = GetString(root, "message") ?? (ok ? "Field filled." : "Fill failed.");
+            var observedValue = root.TryGetProperty("details", out var details) && details.ValueKind == JsonValueKind.Object
+                ? GetString(details, "after")
+                : null;
+            return new WebViewFillResult(ok, message, observedValue);
         }
         catch (JsonException ex)
         {

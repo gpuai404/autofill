@@ -4,7 +4,7 @@ namespace JobAutofill.Core.Contracts;
 
 public interface IProfileRepository
 {
-    Task<Profile> GetCurrentAsync(CancellationToken cancellationToken = default);
+    Task<Profile?> GetCurrentAsync(CancellationToken cancellationToken = default);
     Task SaveAsync(Profile profile, CancellationToken cancellationToken = default);
     Task<Profile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -3,6 +3,7 @@
 
   const dom = window.__domShared || {};
   const optionHandling = window.__optionHandling || {};
+  const siteRules = window.__jobAutofillSiteRules || {};
 
   const REQUIRED_DOM_APIS = [
     'resolveScopedSelector', 'queryAllInElementRoot', 'collectElementsAcrossRoots',
@@ -97,6 +98,12 @@
     const element = dom.resolveScopedSelector(selector);
     if (!element) {
       return result(false, selector, value, 'Element not found.');
+    }
+
+    const fillControlHook = siteRules.hooks?.fillControl;
+    if (typeof fillControlHook === 'function') {
+      const hookResult = await fillControlHook({ element, selector, value, fillStrategy, dom, optionHandling });
+      if (hookResult !== undefined && hookResult !== null) return hookResult;
     }
 
     const normalizedValue = optionHandling.normalize(value);
@@ -205,7 +212,9 @@
       '[class*="Option"]',
       '[class*="suggestion"]',
       '[class*="Suggestion"]'
-    ].join(', ');
+    ].concat(Array.isArray(siteRules.filling?.popupOptionSelectors)
+      ? siteRules.filling.popupOptionSelectors
+      : []).join(', ');
 
     return dom.collectElementsAcrossRoots(document, selector)
       .filter(item => {
@@ -221,8 +230,13 @@
 
   function openTargetsFor(element) {
     const targets = [element];
-    const controls = element.closest('[role="combobox"], [aria-haspopup], .select, .select__control, .react-select__control');
-    const fieldRoot = element.closest('.field, .application-question');
+    const controlSelectors = ['[role="combobox"]', '[aria-haspopup]']
+      .concat(Array.isArray(siteRules.options?.localRootSelectors) ? siteRules.options.localRootSelectors : [])
+      .concat(Array.isArray(siteRules.filling?.controlRootSelectors) ? siteRules.filling.controlRootSelectors : []);
+    const controls = element.closest(controlSelectors.join(', '));
+    const fieldRootSelectors = ['.field', '.application-question']
+      .concat(Array.isArray(siteRules.filling?.fieldRootSelectors) ? siteRules.filling.fieldRootSelectors : []);
+    const fieldRoot = element.closest(fieldRootSelectors.join(', '));
 
     if (controls && !targets.includes(controls)) {
       targets.push(controls);
@@ -241,10 +255,15 @@
   }
 
   async function openPicker(element, option) {
-    const actions = [
-      target => dom.activateElement(target),
-      target => target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'ArrowDown' }))
-    ];
+    const configuredActions = Array.isArray(siteRules.filling?.openActions)
+      ? siteRules.filling.openActions
+      : [];
+    const actionNames = configuredActions.length > 0 ? configuredActions : ['activate', 'arrowDown'];
+    const actions = actionNames.map(name => name === 'activate'
+      ? target => dom.activateElement(target)
+      : name === 'arrowDown'
+        ? target => target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'ArrowDown' }))
+        : null).filter(Boolean);
 
     const targets = openTargetsFor(element);
     for (let targetIndex = 0; targetIndex < targets.length; targetIndex++) {
@@ -337,6 +356,11 @@
     }
 
     const element = dom.resolveScopedSelector(selector);
+    const fillOptionHook = siteRules.hooks?.fillOption;
+    if (element && typeof fillOptionHook === 'function') {
+      const hookResult = await fillOptionHook({ element, selector, option, fillStrategy, dom, optionHandling });
+      if (hookResult !== undefined && hookResult !== null) return hookResult;
+    }
     const capturedOption = capturedOptionSelector ? dom.resolveScopedSelector(capturedOptionSelector) : null;
     if (!element && capturedOption && matchesSelectedOption(capturedOption, option)) {
       if (capturedOption.type === 'checkbox' || capturedOption.type === 'radio') {

@@ -8,6 +8,7 @@ public interface IJobBrowserWorkflowService
 {
     Task<List<DetectedFieldViewModel>> PrepareDetectedFieldsAsync(
         string pageUrl,
+        string language,
         IReadOnlyList<DetectedField> scanFields,
         WebViewCapabilityResult capability,
         Profile profile);

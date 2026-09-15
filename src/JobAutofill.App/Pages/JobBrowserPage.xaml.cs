@@ -15,6 +15,7 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
     private readonly IJobBrowserViewModel _viewModel;
     private readonly IJobBrowserPageService _pageService;
     private readonly IJobApplicationUrlResolver _jobApplicationUrlResolver;
+    private readonly JobWebViewBridge _webViewBridge;
     private bool _isBottomSheetExpanded;
 
     public JobBrowserPage()
@@ -31,13 +32,12 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
         IJobApplicationUrlResolver jobApplicationUrlResolver)
     {
         InitializeComponent();
-        var webViewBridge = new JobWebViewBridge(JobWebView);
+        _webViewBridge = new JobWebViewBridge(JobWebView);
         _viewModel = viewModel;
-        _pageService = pageServiceFactory.Create(_viewModel, webViewBridge);
+        _pageService = pageServiceFactory.Create(_viewModel, _webViewBridge);
         _jobApplicationUrlResolver = jobApplicationUrlResolver;
 
         BindingContext = _viewModel;
-        DetectedFieldsView.ItemsSource = _viewModel.DetectedFields;
         Shell.SetBackButtonBehavior(this, new BackButtonBehavior
         {
             Command = new Command(async () => await NavigateBackAsync())
@@ -48,7 +48,9 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
     {
         if (query.TryGetValue("JobPost", out var value) && value is JobPost jobPost)
         {
-            var jobUrl = _jobApplicationUrlResolver.ResolveScannableUrl(jobPost.Url);
+            var site = _jobApplicationUrlResolver.Resolve(jobPost.Url);
+            var jobUrl = site.ScannableUrl;
+            _webViewBridge.ConfigureSite(site, EnableWebDiagnostics);
             Title = jobPost.Company;
             _viewModel.SetJob(jobPost, jobUrl);
             
@@ -58,6 +60,18 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
             DebugToolbarItem.IsEnabled = false;
             SetBottomSheetExpanded(false);
             JobWebView.Source = new UrlWebViewSource { Url = jobUrl };
+        }
+    }
+
+    private static bool EnableWebDiagnostics
+    {
+        get
+        {
+#if DEBUG
+            return true;
+#else
+            return false;
+#endif
         }
     }
 
@@ -97,6 +111,8 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
         try
         {
             await _pageService.OnWebViewNavigatedAsync();
+            var pageLanguage = await _webViewBridge.GetCurrentPageLanguageAsync();
+            AppLocalizer.ApplyPageLanguage(pageLanguage);
             ScanToolbarItem.IsEnabled = true;
         }
         catch

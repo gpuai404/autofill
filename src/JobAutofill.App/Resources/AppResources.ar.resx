@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c2e1d0d3d3d</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c2e1d0d3d3d</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve"><value>تعبئة الوظائف</value></data>
+  <data name="JobsTabTitle" xml:space="preserve"><value>الوظائف</value></data>
+  <data name="ProfileTabTitle" xml:space="preserve"><value>الملف الشخصي</value></data>
+  <data name="AutofillPageTitle" xml:space="preserve"><value>تعبئة تلقائية</value></data>
+  <data name="ScanAction" xml:space="preserve"><value>مسح</value></data>
+  <data name="FillAction" xml:space="preserve"><value>تعبئة</value></data>
+  <data name="DebugAction" xml:space="preserve"><value>تصحيح</value></data>
+  <data name="DetectedFieldsTitle" xml:space="preserve"><value>الحقول المكتشفة</value></data>
+  <data name="ScanHint" xml:space="preserve"><value>يفتح المسح الحقول المكتشفة هنا.</value></data>
+  <data name="JobsPageTitle" xml:space="preserve"><value>الوظائف</value></data>
+  <data name="PasteJobUrlPlaceholder" xml:space="preserve"><value>ألصق رابط الوظيفة</value></data>
+  <data name="OpenAction" xml:space="preserve"><value>فتح</value></data>
+  <data name="NoJobsAvailable" xml:space="preserve"><value>لا توجد وظائف متاحة.</value></data>
+  <data name="ProfilePageTitle" xml:space="preserve"><value>الملف الشخصي</value></data>
+  <data name="EditAction" xml:space="preserve"><value>تعديل</value></data>
+  <data name="ContactTitle" xml:space="preserve"><value>جهة الاتصال</value></data>
+  <data name="OnlineProfilesTitle" xml:space="preserve"><value>الملفات الشخصية عبر الإنترنت</value></data>
+  <data name="ResumeTitle" xml:space="preserve"><value>السيرة الذاتية</value></data>
+  <data name="EligibilityTitle" xml:space="preserve"><value>الأهلية</value></data>
+  <data name="VoluntaryDisclosuresTitle" xml:space="preserve"><value>الإفصاحات الطوعية</value></data>
+  <data name="AtsAnswersTitle" xml:space="preserve"><value>إجابات ATS</value></data>
+  <data name="RequiresSponsorship" xml:space="preserve"><value>يتطلب كفالة</value></data>
+  <data name="WillingToRelocate" xml:space="preserve"><value>مستعد للنقل</value></data>
+  <data name="FullName" xml:space="preserve"><value>الاسم الكامل</value></data>
+  <data name="Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="Phone" xml:space="preserve"><value>الهاتف</value></data>
+  <data name="Address" xml:space="preserve"><value>العنوان</value></data>
+  <data name="City" xml:space="preserve"><value>المدينة</value></data>
+  <data name="State" xml:space="preserve"><value>الولاية</value></data>
+  <data name="PostalCode" xml:space="preserve"><value>الرمز البريدي</value></data>
+  <data name="Country" xml:space="preserve"><value>الدولة</value></data>
+  <data name="LinkedInUrl" xml:space="preserve"><value>رابط LinkedIn</value></data>
+  <data name="PortfolioUrl" xml:space="preserve"><value>رابط المحفظة</value></data>
+  <data name="GitHubUrl" xml:space="preserve"><value>رابط GitHub</value></data>
+  <data name="CurrentTitle" xml:space="preserve"><value>المسمى الوظيفي الحالي</value></data>
+  <data name="CurrentCompany" xml:space="preserve"><value>الشركة الحالية</value></data>
+  <data name="YearsOfExperience" xml:space="preserve"><value>سنوات الخبرة</value></data>
+  <data name="HighestEducation" xml:space="preserve"><value>أعلى شهادة</value></data>
+  <data name="ResumeFileName" xml:space="preserve"><value>اسم ملف السيرة الذاتية</value></data>
+  <data name="Skills" xml:space="preserve"><value>المهارات</value></data>
+  <data name="ResumeSummary" xml:space="preserve"><value>ملخص السيرة الذاتية</value></data>
+  <data name="WorkAuthorization" xml:space="preserve"><value>تصريح العمل</value></data>
+  <data name="PreferredWorkType" xml:space="preserve"><value>نوع العمل المفضل</value></data>
+  <data name="SalaryExpectation" xml:space="preserve"><value>توقع الراتب</value></data>
+  <data name="NoticePeriod" xml:space="preserve"><value>فترة الإشعار</value></data>
+  <data name="Gender" xml:space="preserve"><value>الجنس</value></data>
+  <data name="RaceOrEthnicity" xml:space="preserve"><value>العنصر أو العرق</value></data>
+  <data name="HispanicOrLatino" xml:space="preserve"><value>هسباني أو لاتيني</value></data>
+  <data name="VeteranStatus" xml:space="preserve"><value>حالة المحارب السابق</value></data>
+  <data name="DisabilityStatus" xml:space="preserve"><value>حالة الإعاقة</value></data>
+  <data name="CoverLetterAnswer" xml:space="preserve"><value>إجابة رسالة التقديم</value></data>
+  <data name="WhyInterested" xml:space="preserve"><value>لماذا أنت مهتم؟</value></data>
+  <data name="AdditionalInformation" xml:space="preserve"><value>معلومات إضافية</value></data>
+</root>

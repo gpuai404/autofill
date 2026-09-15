@@ -424,5 +424,7 @@
     setContentEditableText
   };
 
-  installShadowRootCapture();
+  if (!window.__jobAutofillConfig || window.__jobAutofillConfig.captureClosedShadowRoots !== false) {
+    installShadowRootCapture();
+  }
 })();

@@ -8,14 +8,14 @@ namespace JobAutofill.App.Pages;
 public partial class JobsListPage : ContentPage
 {
     public JobsListPage()
-        : this(MauiServiceResolver.ResolveRequiredService<IJobCatalog>())
+        : this(MauiServiceResolver.ResolveServices<IJobCatalog>().SingleOrDefault())
     {
     }
 
-    private JobsListPage(IJobCatalog jobCatalog)
+    private JobsListPage(IJobCatalog? jobCatalog)
     {
         InitializeComponent();
-        JobsView.ItemsSource = jobCatalog.All;
+        JobsView.ItemsSource = jobCatalog?.All ?? [];
     }
 
     private async void OnJobSelected(object? sender, SelectionChangedEventArgs e)
