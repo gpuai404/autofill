@@ -12,7 +12,7 @@ public class Profile
     public string? PostalCode { get; set; }
     public string? Country { get; set; }
     public string? WorkAuthorizationStatus { get; set; }
-    public bool RequiresSponsorship { get; set; }
+    public string? SponsorshipRequirement { get; set; }
     public string? LinkedInUrl { get; set; }
     public string? PortfolioUrl { get; set; }
     public string? GitHubUrl { get; set; }
@@ -25,7 +25,7 @@ public class Profile
     public string? ResumeSummary { get; set; }
     public string? SalaryExpectation { get; set; }
     public string? NoticePeriod { get; set; }
-    public bool WillingToRelocate { get; set; }
+    public string? RelocationPreference { get; set; }
     public string? PreferredWorkType { get; set; }
     public string? Gender { get; set; }
     public string? RaceEthnicity { get; set; }

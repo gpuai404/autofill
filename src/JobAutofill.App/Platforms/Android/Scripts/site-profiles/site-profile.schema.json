@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jobautofill.invalid/schemas/site-profile.schema.json",
+  "title": "Job Autofill site profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "siteId", "profileVersion", "hosts", "roots", "exclude", "discovery", "options", "filling"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "siteId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9-]+$" },
+    "profileVersion": { "type": "integer", "minimum": 1 },
+    "hosts": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 253 }
+    },
+    "roots": { "$ref": "#/$defs/roots" },
+    "exclude": { "$ref": "#/$defs/exclude" },
+    "discovery": { "$ref": "#/$defs/discovery" },
+    "options": { "$ref": "#/$defs/options" },
+    "filling": { "$ref": "#/$defs/filling" }
+  },
+  "$defs": {
+    "selectors": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["application"],
+      "properties": { "application": { "$ref": "#/$defs/selectors" } }
+    },
+    "exclude": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controls", "containers"],
+      "properties": {
+        "controls": { "$ref": "#/$defs/selectors" },
+        "containers": { "$ref": "#/$defs/selectors" }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fieldSelectors"],
+      "properties": { "fieldSelectors": { "$ref": "#/$defs/selectors" } }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["localRootSelectors", "popupSelectors", "optionSelectors", "optionIdPrefix"],
+      "properties": {
+        "localRootSelectors": { "$ref": "#/$defs/selectors" },
+        "popupSelectors": { "$ref": "#/$defs/selectors" },
+        "optionSelectors": { "$ref": "#/$defs/selectors" },
+        "optionIdPrefix": { "type": "string", "maxLength": 128 }
+      }
+    },
+    "filling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controlRootSelectors", "fieldRootSelectors", "popupOptionSelectors", "openActions"],
+      "properties": {
+        "controlRootSelectors": { "$ref": "#/$defs/selectors" },
+        "fieldRootSelectors": { "$ref": "#/$defs/selectors" },
+        "popupOptionSelectors": { "$ref": "#/$defs/selectors" },
+        "openActions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["activate", "arrowDown"] }
+        }
+      }
+    }
+  }
+}

@@ -45,18 +45,20 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
     ];
 
     private readonly Microsoft.Maui.Controls.WebView _webView;
+    private readonly ISiteProfileProvider _siteProfileProvider;
     private string? _domSharedScript;
     private string? _detectorScript;
     private string? _fillScript;
     private bool _domSharedInjected;
     private bool _detectorInjected;
     private bool _fillScriptInjected;
-    private ResolvedJobSite _site = new("unknown", string.Empty, "site-rules/default.js", SiteAdapterMode.Generic);
+    private ResolvedJobSite _site = new("unknown", string.Empty, "site-profiles/default.json", SiteProfileMode.Generic);
     private bool _enableDiagnostics;
 
-    public JobWebViewBridge(Microsoft.Maui.Controls.WebView webView)
+    public JobWebViewBridge(Microsoft.Maui.Controls.WebView webView, ISiteProfileProvider siteProfileProvider)
     {
         _webView = webView;
+        _siteProfileProvider = siteProfileProvider ?? throw new ArgumentNullException(nameof(siteProfileProvider));
     }
 
     public void ResetInjectedState()
@@ -331,17 +333,17 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
         if (_fillScript == null)
         {
             var runtimeConfiguration = BuildRuntimeConfigurationScript();
+            var siteProfile = await BuildSiteProfileScriptAsync();
             var siteRuleRuntime = await LoadAndroidAssetAsync("site-rules/runtime.js");
             var knownWidgetsScript = await LoadAndroidAssetAsync("site-rules/known-widget-libraries.js");
-            var siteRulesScript = await LoadAndroidAssetAsync(_site.RulesAssetName);
             var optionHandlingScript = await LoadAndroidAssetAsync("generic-engine/option-handling.js");
             var fillScript = await LoadAndroidAssetAsync("filler/fill.js");
-            if (string.IsNullOrWhiteSpace(siteRulesScript) || string.IsNullOrWhiteSpace(optionHandlingScript) || string.IsNullOrWhiteSpace(fillScript))
+            if (string.IsNullOrWhiteSpace(optionHandlingScript) || string.IsNullOrWhiteSpace(fillScript))
             {
                 throw new InvalidOperationException("option-handling.js or fill.js was not packaged with the app.");
             }
 
-            _fillScript = runtimeConfiguration + "\n" + siteRuleRuntime + "\n" + knownWidgetsScript + "\n" + siteRulesScript + "\n" + optionHandlingScript + "\n" + fillScript;
+            _fillScript = runtimeConfiguration + "\n" + siteProfile + "\n" + knownWidgetsScript + "\n" + siteRuleRuntime + "\n" + optionHandlingScript + "\n" + fillScript;
         }
 
         await _webView.EvaluateJavaScriptAsync(_fillScript);
@@ -411,15 +413,28 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
     private async Task<string> BuildDetectorScriptAsync()
     {
         var shared = await LoadAndroidAssetsAsync(DetectorAssetNames);
+        var siteProfile = await BuildSiteProfileScriptAsync();
         var siteRuleRuntime = await LoadAndroidAssetAsync("site-rules/runtime.js");
         var knownWidgets = await LoadAndroidAssetAsync("site-rules/known-widget-libraries.js");
-        var siteRules = await LoadAndroidAssetAsync(_site.RulesAssetName);
-        if (string.IsNullOrWhiteSpace(siteRules))
+        return BuildRuntimeConfigurationScript() + "\n" + siteProfile + "\n" + knownWidgets + "\n" + siteRuleRuntime + "\n" + shared;
+    }
+
+    private async Task<string> BuildSiteProfileScriptAsync()
+    {
+        var profileJson = await _siteProfileProvider.GetProfileJsonAsync(_site);
+        if (string.IsNullOrWhiteSpace(profileJson))
         {
-            throw new InvalidOperationException($"{_site.RulesAssetName} was not packaged with the app.");
+            throw new InvalidOperationException($"{_site.ProfileAssetName} was not packaged with the app.");
         }
 
-        return BuildRuntimeConfigurationScript() + "\n" + siteRuleRuntime + "\n" + knownWidgets + "\n" + siteRules + "\n" + shared;
+        using var document = JsonDocument.Parse(profileJson);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidOperationException($"{_site.ProfileAssetName} must contain a JSON object.");
+        }
+
+        var normalizedProfile = JsonSerializer.Serialize(document.RootElement);
+        return $"window.__jobAutofillSiteProfile = {normalizedProfile};";
     }
 
     private string BuildRuntimeConfigurationScript()
@@ -427,7 +442,7 @@ public sealed class JobWebViewBridge : IJobWebViewBridge
         var configuration = JsonSerializer.Serialize(new
         {
             siteId = _site.SiteId,
-            adapterMode = _site.AdapterMode == SiteAdapterMode.Verified ? "verified" : "generic",
+            profileMode = _site.ProfileMode == SiteProfileMode.Profiled ? "profiled" : "generic",
             enableDiagnostics = _enableDiagnostics,
             captureClosedShadowRoots = true
         });

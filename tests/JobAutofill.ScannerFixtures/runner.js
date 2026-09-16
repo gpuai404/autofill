@@ -5,9 +5,8 @@
     '/src/JobAutofill.App/Platforms/Android/Scripts/shared/text-utils.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/shared/dom-traversal.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/shared/selector-resolver.js',
-    '/src/JobAutofill.App/Platforms/Android/Scripts/site-rules/runtime.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/site-rules/known-widget-libraries.js',
-    '/src/JobAutofill.App/Platforms/Android/Scripts/site-rules/default.js',
+    '/src/JobAutofill.App/Platforms/Android/Scripts/site-rules/runtime.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/metadata/metadata-resolver.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/label-discovery.js',
     '/src/JobAutofill.App/Platforms/Android/Scripts/generic-engine/control-classification.js',
@@ -50,6 +49,7 @@
     state.manifest ||= await loadJson('manifest.json');
     state.scripts ||= await Promise.all(scriptPaths.map(loadText));
     state.genericRules ||= await loadJson(genericRulesPath);
+    state.siteProfile ||= await loadJson('/src/JobAutofill.App/Platforms/Android/Scripts/site-profiles/default.json');
   }
 
   function injectScript(frameWindow, source) {
@@ -69,6 +69,7 @@
     });
 
     iframe.contentWindow.__fieldControlRules = state.genericRules;
+    iframe.contentWindow.__jobAutofillSiteProfile = state.siteProfile;
 
     for (const script of state.scripts) {
       injectScript(iframe.contentWindow, script);

@@ -121,7 +121,9 @@ public sealed class ProfileRepository : IProfileRepository
         public string? PostalCode { get; set; }
         public string? Country { get; set; }
         public string? WorkAuthorizationStatus { get; set; }
-        public bool RequiresSponsorship { get; set; }
+        [Column("RequiresSponsorship")]
+        public bool LegacyRequiresSponsorship { get; set; }
+        public string? SponsorshipRequirement { get; set; }
         public string? LinkedInUrl { get; set; }
         public string? PortfolioUrl { get; set; }
         public string? GitHubUrl { get; set; }
@@ -134,7 +136,9 @@ public sealed class ProfileRepository : IProfileRepository
         public string? ResumeSummary { get; set; }
         public string? SalaryExpectation { get; set; }
         public string? NoticePeriod { get; set; }
-        public bool WillingToRelocate { get; set; }
+        [Column("WillingToRelocate")]
+        public bool LegacyWillingToRelocate { get; set; }
+        public string? RelocationPreference { get; set; }
         public string? PreferredWorkType { get; set; }
         public string? Gender { get; set; }
         public string? RaceEthnicity { get; set; }
@@ -158,7 +162,7 @@ public sealed class ProfileRepository : IProfileRepository
                 PostalCode = profile.PostalCode,
                 Country = profile.Country,
                 WorkAuthorizationStatus = profile.WorkAuthorizationStatus,
-                RequiresSponsorship = profile.RequiresSponsorship,
+                SponsorshipRequirement = profile.SponsorshipRequirement,
                 LinkedInUrl = profile.LinkedInUrl,
                 PortfolioUrl = profile.PortfolioUrl,
                 GitHubUrl = profile.GitHubUrl,
@@ -171,7 +175,7 @@ public sealed class ProfileRepository : IProfileRepository
                 ResumeSummary = profile.ResumeSummary,
                 SalaryExpectation = profile.SalaryExpectation,
                 NoticePeriod = profile.NoticePeriod,
-                WillingToRelocate = profile.WillingToRelocate,
+                RelocationPreference = profile.RelocationPreference,
                 PreferredWorkType = profile.PreferredWorkType,
                 Gender = profile.Gender,
                 RaceEthnicity = profile.RaceEthnicity,
@@ -201,7 +205,7 @@ public sealed class ProfileRepository : IProfileRepository
                 PostalCode = PostalCode,
                 Country = Country,
                 WorkAuthorizationStatus = WorkAuthorizationStatus,
-                RequiresSponsorship = RequiresSponsorship,
+                SponsorshipRequirement = SponsorshipRequirement ?? (LegacyRequiresSponsorship ? "Yes" : null),
                 LinkedInUrl = LinkedInUrl,
                 PortfolioUrl = PortfolioUrl,
                 GitHubUrl = GitHubUrl,
@@ -214,7 +218,7 @@ public sealed class ProfileRepository : IProfileRepository
                 ResumeSummary = ResumeSummary,
                 SalaryExpectation = SalaryExpectation,
                 NoticePeriod = NoticePeriod,
-                WillingToRelocate = WillingToRelocate,
+                RelocationPreference = RelocationPreference ?? (LegacyWillingToRelocate ? "Yes" : null),
                 PreferredWorkType = PreferredWorkType,
                 Gender = Gender,
                 RaceEthnicity = RaceEthnicity,

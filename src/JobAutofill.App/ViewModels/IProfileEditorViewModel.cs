@@ -21,8 +21,9 @@ public interface IProfileEditorViewModel
     string? Skills { get; set; }
     string? ResumeSummary { get; set; }
     string? WorkAuthorizationStatus { get; set; }
-    bool RequiresSponsorship { get; set; }
-    bool WillingToRelocate { get; set; }
+    string? SponsorshipRequirement { get; set; }
+    string? RelocationPreference { get; set; }
+    IReadOnlyList<string> YesNoOptions { get; }
     string? PreferredWorkType { get; set; }
     string? SalaryExpectation { get; set; }
     string? NoticePeriod { get; set; }

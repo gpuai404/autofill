@@ -4,6 +4,8 @@ public class DetectedField
 {
     public required string Selector { get; set; }
     public string? Label { get; set; }
+    public string? LabelSource { get; set; }
+    public double LabelConfidence { get; set; }
     public string? InputType { get; set; }
     public string? ControlType { get; set; }
     public string? ControlFamily { get; set; }

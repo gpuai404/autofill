@@ -2,7 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:app="clr-namespace:JobAutofill.App"
+             xmlns:viewModels="clr-namespace:JobAutofill.App.ViewModels"
              x:Class="JobAutofill.App.Pages.JobBrowserPage"
+             x:DataType="viewModels:JobBrowserViewModel"
              Title="{x:Static app:AppLocalizer.AutofillPageTitle}"
              Shell.NavBarIsVisible="True">
     <ContentPage.ToolbarItems>
@@ -73,7 +75,7 @@
                                     ItemsSource="{Binding FieldGroups}"
                                     IsGrouped="True">
                         <CollectionView.GroupHeaderTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="viewModels:DetectedFieldGroupViewModel">
                                 <Label Text="{Binding Title}"
                                        Padding="0,10,0,4"
                                        FontAttributes="Bold"
@@ -87,9 +89,9 @@
                                    FontSize="12" />
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="viewModels:DetectedFieldViewModel">
                                 <Grid Padding="0,6"
-                                      RowDefinitions="Auto,Auto,Auto"
+                                      RowDefinitions="Auto,Auto,Auto,Auto"
                                       RowSpacing="8">
                                     <Grid ColumnDefinitions="*,Auto"
                                           ColumnSpacing="12"
@@ -115,9 +117,9 @@
                                                    FontSize="12"
                                                    HorizontalTextAlignment="End"
                                                    TextColor="#57606A" />
-                                            <Button Text="{Binding ApprovalActionText}"
-                                                    Clicked="OnApproveFieldClicked"
-                                                    IsVisible="{Binding CanApprove}"
+                                            <Button Text="{Binding ConfirmationActionText}"
+                                                    Clicked="OnConfirmFieldClicked"
+                                                    IsVisible="{Binding CanConfirm}"
                                                     Padding="10,4"
                                                     FontSize="12"
                                                     CornerRadius="6"
@@ -137,8 +139,22 @@
                                            IsVisible="{Binding ShouldShowOptionsSummary}"
                                            LineBreakMode="TailTruncation" />
 
+                                    <Grid Grid.Row="2"
+                                          ColumnDefinitions="*,Auto"
+                                          ColumnSpacing="8"
+                                          IsVisible="{Binding CanEnterValue}">
+                                        <Entry Text="{Binding DraftValue, Mode=TwoWay}"
+                                               Placeholder="Enter answer"
+                                               ReturnType="Done" />
+                                        <Button Grid.Column="1"
+                                                Text="Use answer"
+                                                IsEnabled="{Binding CanUseDraftValue}"
+                                                Clicked="OnUseFieldAnswerClicked"
+                                                CommandParameter="{Binding .}" />
+                                    </Grid>
+
                                     <!-- Individual Option Buttons (Horizontal Scroll) -->
-                                    <CollectionView Grid.Row="2"
+                                    <CollectionView Grid.Row="3"
                                                     ItemsSource="{Binding Options}"
                                                     SelectionMode="None"
                                                     IsVisible="{Binding HasOptions}"
@@ -148,7 +164,7 @@
                                                                ItemSpacing="6" />
                                         </CollectionView.ItemsLayout>
                                         <CollectionView.ItemTemplate>
-                                            <DataTemplate>
+                                            <DataTemplate x:DataType="viewModels:DetectedFieldOptionViewModel">
                                                 <Button Text="{Binding DisplayText}"
                                                         Clicked="OnDetectedFieldOptionClicked"
                                                         Padding="12,6"

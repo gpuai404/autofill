@@ -158,16 +158,20 @@
                               ColumnSpacing="12">
                             <Label Text="{x:Static app:AppLocalizer.RequiresSponsorship}"
                                    VerticalTextAlignment="Center" />
-                            <Switch x:Name="SponsorshipSwitch"
-                                    IsToggled="{Binding RequiresSponsorship}"
+                            <Picker x:Name="SponsorshipPicker"
+                                    ItemsSource="{Binding YesNoOptions}"
+                                    SelectedItem="{Binding SponsorshipRequirement}"
+                                    Title="Not answered"
                                     Grid.Column="1" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto"
                               ColumnSpacing="12">
                             <Label Text="{x:Static app:AppLocalizer.WillingToRelocate}"
                                    VerticalTextAlignment="Center" />
-                            <Switch x:Name="RelocateSwitch"
-                                    IsToggled="{Binding WillingToRelocate}"
+                            <Picker x:Name="RelocatePicker"
+                                    ItemsSource="{Binding YesNoOptions}"
+                                    SelectedItem="{Binding RelocationPreference}"
+                                    Title="Not answered"
                                     Grid.Column="1" />
                         </Grid>
                         <Entry x:Name="PreferredWorkTypeEntry"

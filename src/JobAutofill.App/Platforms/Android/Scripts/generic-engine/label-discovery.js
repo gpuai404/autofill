@@ -1050,55 +1050,42 @@
     return isUsableLabelText(text) ? text : '';
   }
 
-  function labelFor(element) {
-    const candidates = [];
-
-    if (element.labels && element.labels.length) {
-      const labelText = directNonMessageTextFor(element.labels[0]) || compactText(element.labels[0].textContent);
-      addCandidate(candidates, element, labelText);
+  function labelEvidenceFor(element) {
+    const evidence = [];
+    function consider(text, source, confidence) {
+      const accepted = [];
+      addCandidate(accepted, element, text);
+      if (accepted.length > 0) evidence.push({ text: clippedLabel(accepted[0], MAX_LABEL_LENGTH), source, confidence });
     }
 
+    if (element.labels && element.labels.length) {
+      consider(directNonMessageTextFor(element.labels[0]) || compactText(element.labels[0].textContent), 'associated-label', 1);
+    }
     if (element.id) {
       const root = element.getRootNode ? element.getRootNode() : element.ownerDocument || document;
       const explicitLabel = root.querySelector ? root.querySelector('label[for="' + cssEscape(element.id) + '"]') : null;
-      const labelText = explicitLabel ? (directNonMessageTextFor(explicitLabel) || compactText(explicitLabel.textContent)) : '';
-      addCandidate(candidates, element, labelText);
+      consider(explicitLabel ? (directNonMessageTextFor(explicitLabel) || compactText(explicitLabel.textContent)) : '', 'label-for', 1);
     }
+    consider(textFromLabelledBy(element), 'aria-labelledby', 0.98);
+    consider(element.getAttribute('aria-label'), 'aria-label', 0.96);
+    consider(humanize(element.getAttribute('placeholder') || ''), 'placeholder', 0.70);
+    consider(humanize(element.getAttribute('data-testid') || ''), 'test-id', 0.55);
+    consider(labelTextForStandaloneBinaryOrFile(element), 'control-shape', 0.88);
+    consider(nearestLabelText(element), 'nearby-question', 0.78);
+    consider(labelTextAbove(element), 'nearby-text', 0.68);
+    consider(textFromDescribedBy(element), 'aria-describedby', 0.60);
 
-    const labelledByText = textFromLabelledBy(element);
-    addCandidate(candidates, element, labelledByText);
+    return evidence.length > 0 ? evidence[0] : { text: '', source: 'none', confidence: 0 };
+  }
 
-    const explicit =
-      element.getAttribute('aria-label') ||
-      element.getAttribute('placeholder') ||
-      element.getAttribute('data-testid') ||
-      '';
-
-    const explicitText = humanize(explicit);
-    addCandidate(candidates, element, explicitText);
-
-    const shapeSpecific = labelTextForStandaloneBinaryOrFile(element);
-    addCandidate(candidates, element, shapeSpecific);
-
-    const nearest = nearestLabelText(element);
-    addCandidate(candidates, element, nearest);
-
-    const above = labelTextAbove(element);
-    addCandidate(candidates, element, above);
-
-    const describedByText = textFromDescribedBy(element);
-    addCandidate(candidates, element, describedByText);
-
-    if (candidates.length === 0) {
-      return '';
-    }
-
-    return clippedLabel(candidates[0], MAX_LABEL_LENGTH);
+  function labelFor(element) {
+    return labelEvidenceFor(element).text;
   }
 
 
   window.__labelDiscovery = {
     labelFor,
+    labelEvidenceFor,
     fieldMessageFor,
     clippedLabel,
     isGenericPlaceholderText,

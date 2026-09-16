@@ -58,8 +58,8 @@ public partial class ProfileEditorPage : ContentPage
         SkillsEditor.IsReadOnly = !editing;
         SummaryEditor.IsReadOnly = !editing;
         WorkAuthorizationEntry.IsReadOnly = !editing;
-        SponsorshipSwitch.IsEnabled = editing;
-        RelocateSwitch.IsEnabled = editing;
+        SponsorshipPicker.IsEnabled = editing;
+        RelocatePicker.IsEnabled = editing;
         PreferredWorkTypeEntry.IsReadOnly = !editing;
         SalaryExpectationEntry.IsReadOnly = !editing;
         NoticePeriodEntry.IsReadOnly = !editing;

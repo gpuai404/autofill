@@ -4,11 +4,11 @@ public sealed class JobApplicationUrlResolver : IJobApplicationUrlResolver
 {
     private static readonly SiteDefinition[] Sites =
     [
-        new("lever", host => host.Equals("jobs.lever.co", StringComparison.OrdinalIgnoreCase), TransformUrl: AddLeverApplyPath),
-        new("greenhouse", host => HostMatches(host, "greenhouse.io")),
-        new("workday", host => HostMatches(host, "myworkdayjobs.com")),
-        new("ashby", host => host.Equals("jobs.ashbyhq.com", StringComparison.OrdinalIgnoreCase)),
-        new("smartrecruiters", host => host.Equals("jobs.smartrecruiters.com", StringComparison.OrdinalIgnoreCase))
+        new("lever", host => host.Equals("jobs.lever.co", StringComparison.OrdinalIgnoreCase), "site-profiles/lever.json", AddLeverApplyPath),
+        new("greenhouse", host => HostMatches(host, "greenhouse.io"), "site-profiles/greenhouse.json"),
+        new("workday", host => HostMatches(host, "myworkdayjobs.com"), "site-profiles/workday.json"),
+        new("ashby", host => host.Equals("jobs.ashbyhq.com", StringComparison.OrdinalIgnoreCase), "site-profiles/ashby.json"),
+        new("smartrecruiters", host => host.Equals("jobs.smartrecruiters.com", StringComparison.OrdinalIgnoreCase), "site-profiles/smartrecruiters.json")
     ];
 
     public ResolvedJobSite Resolve(string url)
@@ -25,19 +25,15 @@ public sealed class JobApplicationUrlResolver : IJobApplicationUrlResolver
     }
 
     private static ResolvedJobSite GenericSite(string siteId, string url) =>
-        new(siteId, url, "site-rules/default.js", SiteAdapterMode.Generic);
+        new(siteId, url, "site-profiles/default.json", SiteProfileMode.Generic);
 
     private static ResolvedJobSite ResolveSite(SiteDefinition site, Uri uri)
     {
-        var rulesAssetName = site.RulesAssetName ?? "site-rules/default.js";
-        var adapterMode = site.RulesAssetName is null
-            ? SiteAdapterMode.Generic
-            : SiteAdapterMode.Verified;
         return new ResolvedJobSite(
             site.Id,
             (site.TransformUrl?.Invoke(uri) ?? uri).ToString(),
-            rulesAssetName,
-            adapterMode);
+            site.ProfileAssetName,
+            SiteProfileMode.Profiled);
     }
 
     private static Uri AddLeverApplyPath(Uri uri)
@@ -62,6 +58,6 @@ public sealed class JobApplicationUrlResolver : IJobApplicationUrlResolver
     private sealed record SiteDefinition(
         string Id,
         Func<string, bool> MatchesHost,
-        Func<Uri, Uri>? TransformUrl = null,
-        string? RulesAssetName = null);
+        string ProfileAssetName,
+        Func<Uri, Uri>? TransformUrl = null);
 }

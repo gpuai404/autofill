@@ -22,17 +22,19 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
         : this(
             MauiServiceResolver.ResolveRequiredService<IJobBrowserViewModel>(),
             MauiServiceResolver.ResolveRequiredService<IJobBrowserPageServiceFactory>(),
-            MauiServiceResolver.ResolveRequiredService<IJobApplicationUrlResolver>())
+            MauiServiceResolver.ResolveRequiredService<IJobApplicationUrlResolver>(),
+            MauiServiceResolver.ResolveRequiredService<ISiteProfileProvider>())
     {
     }
 
     private JobBrowserPage(
         IJobBrowserViewModel viewModel,
         IJobBrowserPageServiceFactory pageServiceFactory,
-        IJobApplicationUrlResolver jobApplicationUrlResolver)
+        IJobApplicationUrlResolver jobApplicationUrlResolver,
+        ISiteProfileProvider siteProfileProvider)
     {
         InitializeComponent();
-        _webViewBridge = new JobWebViewBridge(JobWebView);
+        _webViewBridge = new JobWebViewBridge(JobWebView, siteProfileProvider);
         _viewModel = viewModel;
         _pageService = pageServiceFactory.Create(_viewModel, _webViewBridge);
         _jobApplicationUrlResolver = jobApplicationUrlResolver;
@@ -94,6 +96,7 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
 
     private void OnWebViewNavigating(object? sender, WebNavigatingEventArgs e)
     {
+        _webViewBridge.ConfigureSite(_jobApplicationUrlResolver.Resolve(e.Url), EnableWebDiagnostics);
         _pageService.OnWebViewNavigating();
         ScanToolbarItem.IsEnabled = false;
         FillToolbarItem.IsEnabled = false;
@@ -172,14 +175,25 @@ public partial class JobBrowserPage : ContentPage, IQueryAttributable
         UpdateToolbarItems();
     }
 
-    private async void OnApproveFieldClicked(object? sender, EventArgs e)
+    private async void OnConfirmFieldClicked(object? sender, EventArgs e)
     {
         if (sender is not Button { CommandParameter: DetectedFieldViewModel field })
         {
             return;
         }
 
-        await _pageService.ApproveFieldAsync(field);
+        await _pageService.ConfirmFieldAsync(field);
+        UpdateToolbarItems();
+    }
+
+    private async void OnUseFieldAnswerClicked(object? sender, EventArgs e)
+    {
+        if (sender is not Button { CommandParameter: DetectedFieldViewModel field })
+        {
+            return;
+        }
+
+        await _pageService.UseFieldAnswerAsync(field);
         UpdateToolbarItems();
     }
 

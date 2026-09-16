@@ -55,9 +55,14 @@ public sealed class FieldConsolidator
                 ScanId = context.ScanId,
                 Locator = source.Selector,
                 Label = label,
+                LabelSource = string.IsNullOrWhiteSpace(source.LabelSource) ? "legacy-unknown" : source.LabelSource,
+                LabelConfidence = string.IsNullOrWhiteSpace(source.LabelSource)
+                    ? (string.IsNullOrWhiteSpace(label) ? 0 : 0.75)
+                    : Math.Clamp(source.LabelConfidence, 0, 1),
                 ControlKind = ControlKind(source),
                 Requirement = Requirement(source),
                 FillCapability = FillCapability(source),
+                OptionBehavior = OptionBehavior(source),
                 Sensitivity = Sensitivity(source),
                 Source = source,
                 Options = source.Options
@@ -108,6 +113,22 @@ public sealed class FieldConsolidator
         string.Equals(field.FillStrategy, "skip", StringComparison.OrdinalIgnoreCase) ? FieldFillCapability.Manual :
         string.IsNullOrWhiteSpace(field.FillStrategy) ? FieldFillCapability.Unsupported :
         FieldFillCapability.Automatic;
+
+    private static FieldOptionBehavior OptionBehavior(DetectedField field)
+    {
+        if (field.Options.Count > 0) return FieldOptionBehavior.Captured;
+        if (string.Equals(field.ControlType, "combobox", StringComparison.OrdinalIgnoreCase) &&
+            field.AriaAutocomplete is not null &&
+            (field.AriaAutocomplete.Equals("list", StringComparison.OrdinalIgnoreCase) ||
+             field.AriaAutocomplete.Equals("both", StringComparison.OrdinalIgnoreCase) ||
+             field.AriaAutocomplete.Equals("inline", StringComparison.OrdinalIgnoreCase)))
+        {
+            return FieldOptionBehavior.Searchable;
+        }
+        return string.IsNullOrWhiteSpace(field.ExtractionActionGroup)
+            ? FieldOptionBehavior.None
+            : FieldOptionBehavior.Popup;
+    }
 
     private static FieldSensitivity Sensitivity(DetectedField field)
     {

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "siteId": "generic",
+  "profileVersion": 1,
+  "hosts": [],
+  "roots": { "application": [] },
+  "exclude": { "controls": [], "containers": [] },
+  "discovery": { "fieldSelectors": [] },
+  "options": {
+    "localRootSelectors": [],
+    "popupSelectors": [],
+    "optionSelectors": [],
+    "optionIdPrefix": ""
+  },
+  "filling": {
+    "controlRootSelectors": [],
+    "fieldRootSelectors": [],
+    "popupOptionSelectors": [],
+    "openActions": []
+  }
+}

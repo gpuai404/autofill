@@ -73,6 +73,8 @@
     return {
       selector: field.selector || '',
       label: field.label || '',
+      labelSource: field.labelEvidence?.source || 'unknown',
+      labelConfidence: Number(field.labelEvidence?.confidence || 0),
       inputType: controlInfo.controlType || '',
       fieldCategory: sensitiveInfo.fieldCategory || '',
       fieldSubCategory: sensitiveInfo.fieldSubCategory || '',

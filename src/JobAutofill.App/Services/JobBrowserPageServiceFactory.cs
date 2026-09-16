@@ -11,17 +11,20 @@ public sealed class JobBrowserPageServiceFactory : IJobBrowserPageServiceFactory
     private readonly IJobBrowserStatusService _statusService;
     private readonly IDetectedFieldViewModelMapper _detectedFieldViewModelMapper;
     private readonly IProfileRepository _profileRepository;
+    private readonly IFieldOptionEnrichmentService _optionEnrichmentService;
 
     public JobBrowserPageServiceFactory(
         IJobBrowserWorkflowService workflowService,
         IJobBrowserStatusService statusService,
         IDetectedFieldViewModelMapper detectedFieldViewModelMapper,
-        IProfileRepository profileRepository)
+        IProfileRepository profileRepository,
+        IFieldOptionEnrichmentService optionEnrichmentService)
     {
         _workflowService = workflowService;
         _statusService = statusService;
         _detectedFieldViewModelMapper = detectedFieldViewModelMapper;
         _profileRepository = profileRepository;
+        _optionEnrichmentService = optionEnrichmentService;
     }
 
     public IJobBrowserPageService Create(IJobBrowserViewModel viewModel, IJobWebViewBridge webViewBridge)
@@ -32,6 +35,7 @@ public sealed class JobBrowserPageServiceFactory : IJobBrowserPageServiceFactory
             _workflowService,
             _statusService,
             _detectedFieldViewModelMapper,
-            _profileRepository);
+            _profileRepository,
+            _optionEnrichmentService);
     }
 }

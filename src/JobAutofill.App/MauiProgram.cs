@@ -45,6 +45,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IJobCatalog, DemoJobCatalog>();
 #endif
         builder.Services.AddSingleton<IJobApplicationUrlResolver, JobApplicationUrlResolver>();
+        builder.Services.AddSingleton<ISiteProfileProvider, EmbeddedSiteProfileProvider>();
         builder.Services.AddSingleton<IJobBrowserStatusService, JobBrowserStatusService>();
         builder.Services.AddSingleton<ITelemetryService, NullTelemetryService>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
@@ -55,6 +56,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ProfileProposalMatcher>();
         builder.Services.AddSingleton<FieldPolicyEvaluator>();
         builder.Services.AddSingleton<ApplicationFieldPipeline>();
+        builder.Services.AddSingleton<IFieldOptionEnrichmentService, FieldOptionEnrichmentService>();
         builder.Services.AddSingleton<IJobBrowserWorkflowService, JobBrowserWorkflowService>();
         builder.Services.AddSingleton<IJobBrowserPageServiceFactory, JobBrowserPageServiceFactory>();
         builder.Services.AddSingleton<AppShell>();

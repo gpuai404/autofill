@@ -6,7 +6,8 @@ public interface IJobBrowserPageService
 {
     Task ScanAsync(string pageUrl);
     Task FillAsync();
-    Task ApproveFieldAsync(DetectedFieldViewModel field);
+    Task ConfirmFieldAsync(DetectedFieldViewModel field);
+    Task UseFieldAnswerAsync(DetectedFieldViewModel field);
     Task FocusFieldAsync(DetectedFieldViewModel field);
     Task DebugAsync();
     Task SelectOptionAsync(DetectedFieldOptionViewModel option);

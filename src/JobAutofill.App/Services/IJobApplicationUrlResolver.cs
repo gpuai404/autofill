@@ -8,11 +8,11 @@ public interface IJobApplicationUrlResolver
 public sealed record ResolvedJobSite(
     string SiteId,
     string ScannableUrl,
-    string RulesAssetName,
-    SiteAdapterMode AdapterMode);
+    string ProfileAssetName,
+    SiteProfileMode ProfileMode);
 
-public enum SiteAdapterMode
+public enum SiteProfileMode
 {
     Generic,
-    Verified
+    Profiled
 }

@@ -35,6 +35,7 @@
     <!-- WebView bridge helpers -->
     <AndroidAsset Include="Platforms/Android/Scripts/webview/bridge-runtime.js" Link="webview/bridge-runtime.js" />
     <AndroidAsset Include="Platforms/Android/Scripts/site-rules/*.js" Link="site-rules/%(Filename)%(Extension)" />
+    <AndroidAsset Include="Platforms/Android/Scripts/site-profiles/*.json" Link="site-profiles/%(Filename)%(Extension)" />
     <!-- Metadata: built-in generic rules + resolver (site-specific metadata is provided by C# at runtime, not bundled) -->
     <AndroidAsset Include="Platforms/Android/Scripts/metadata/generic-field-control-rules.json" Link="metadata/generic-field-control-rules.json" />
     <AndroidAsset Include="Platforms/Android/Scripts/metadata/metadata-resolver.js" Link="metadata/metadata-resolver.js" />

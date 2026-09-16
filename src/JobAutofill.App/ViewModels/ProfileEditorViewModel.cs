@@ -67,10 +67,12 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
     private string? _workAuthorizationStatus;
 
     [ObservableProperty]
-    private bool _requiresSponsorship;
+    private string? _sponsorshipRequirement;
 
     [ObservableProperty]
-    private bool _willingToRelocate;
+    private string? _relocationPreference;
+
+    public IReadOnlyList<string> YesNoOptions { get; } = ["Yes", "No"];
 
     [ObservableProperty]
     private string? _preferredWorkType;
@@ -171,8 +173,8 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
         Skills = _profile.Skills;
         ResumeSummary = _profile.ResumeSummary;
         WorkAuthorizationStatus = _profile.WorkAuthorizationStatus;
-        RequiresSponsorship = _profile.RequiresSponsorship;
-        WillingToRelocate = _profile.WillingToRelocate;
+        SponsorshipRequirement = _profile.SponsorshipRequirement;
+        RelocationPreference = _profile.RelocationPreference;
         PreferredWorkType = _profile.PreferredWorkType;
         SalaryExpectation = _profile.SalaryExpectation;
         NoticePeriod = _profile.NoticePeriod;
@@ -211,8 +213,8 @@ public partial class ProfileEditorViewModel : ObservableObject, IProfileEditorVi
         _profile.Skills = Skills;
         _profile.ResumeSummary = ResumeSummary;
         _profile.WorkAuthorizationStatus = WorkAuthorizationStatus;
-        _profile.RequiresSponsorship = RequiresSponsorship;
-        _profile.WillingToRelocate = WillingToRelocate;
+        _profile.SponsorshipRequirement = SponsorshipRequirement;
+        _profile.RelocationPreference = RelocationPreference;
         _profile.PreferredWorkType = PreferredWorkType;
         _profile.SalaryExpectation = SalaryExpectation;
         _profile.NoticePeriod = NoticePeriod;

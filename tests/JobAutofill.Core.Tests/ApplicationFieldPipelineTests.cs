@@ -91,6 +91,37 @@ public sealed class ApplicationFieldPipelineTests
         Assert.Equal(FieldDisposition.Duplicate, results[1].Disposition);
     }
 
+    [Fact]
+    public void WeakLabelEvidenceCannotProduceAnAutomaticProfileMatch()
+    {
+        var source = Source("Email", "email", "setNativeValue");
+        source.LabelSource = "test-id";
+        source.LabelConfidence = 0.55;
+        var field = Assert.Single(_consolidator.Consolidate(_context, [source])).Field!;
+
+        var state = _policy.Evaluate(field, _matcher.Match(field, new Profile { Email = "person@example.test" }, _context));
+
+        Assert.Null(state.Proposal);
+        Assert.Equal(FieldResolutionState.NeedsInput, state.Resolution);
+        Assert.False(state.IsReadyToFill);
+    }
+
+    [Fact]
+    public void SearchableChoiceCanUseKnownProfileValueWithoutEnumeratingRemoteCatalog()
+    {
+        var source = Source("Country", "combobox", "openPopupThenSelectCapturedOption");
+        source.AriaAutocomplete = "list";
+        source.ExtractionActionGroup = "comboboxPopup";
+        source.RequiresCapturedOption = true;
+        var field = Assert.Single(_consolidator.Consolidate(_context, [source])).Field!;
+
+        var proposal = _matcher.Match(field, new Profile { Country = "Belgium" }, _context);
+
+        Assert.Equal(FieldOptionBehavior.Searchable, field.OptionBehavior);
+        Assert.NotNull(proposal);
+        Assert.Empty(proposal.SelectedOptions);
+    }
+
     private ApplicationFieldDescriptor Descriptor(string label, string controlType, string fillStrategy)
     {
         var source = Source(label, controlType, fillStrategy);
@@ -101,6 +132,8 @@ public sealed class ApplicationFieldPipelineTests
     {
         Selector = "#field",
         Label = label,
+        LabelSource = "test-fixture",
+        LabelConfidence = 1,
         ControlType = controlType,
         FillStrategy = fillStrategy,
         Required = "true"

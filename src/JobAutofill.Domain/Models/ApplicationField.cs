@@ -27,6 +27,14 @@ public enum FieldFillCapability
     Unsupported
 }
 
+public enum FieldOptionBehavior
+{
+    None,
+    Captured,
+    Popup,
+    Searchable
+}
+
 public enum FieldSensitivity
 {
     Standard,
@@ -76,9 +84,12 @@ public sealed record ApplicationFieldDescriptor
     public required string ScanId { get; init; }
     public required string Locator { get; init; }
     public required string Label { get; init; }
+    public required string LabelSource { get; init; }
+    public required double LabelConfidence { get; init; }
     public required ApplicationControlKind ControlKind { get; init; }
     public required FieldRequirement Requirement { get; init; }
     public required FieldFillCapability FillCapability { get; init; }
+    public required FieldOptionBehavior OptionBehavior { get; init; }
     public required FieldSensitivity Sensitivity { get; init; }
     public required DetectedField Source { get; init; }
     public IReadOnlyList<DetectedFieldOption> Options { get; init; } = [];
@@ -92,6 +103,7 @@ public sealed record FieldProposal
     public required double Score { get; init; }
     public required FieldProposalSource Source { get; init; }
     public required string Evidence { get; init; }
+    public required double FieldIdentityConfidence { get; init; }
     public IReadOnlyList<SelectedFieldOption> SelectedOptions { get; init; } = [];
 }
 

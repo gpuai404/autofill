@@ -6,6 +6,12 @@ public sealed class FieldPolicyEvaluator
 {
     public ApplicationFieldState Evaluate(ApplicationFieldDescriptor field, FieldProposal? proposal)
     {
+        if (field.LabelConfidence < 0.70)
+        {
+            return State(field, null, FieldResolutionState.NeedsInput,
+                "This field has no trustworthy label. Review it on the page.");
+        }
+
         if (field.Sensitivity == FieldSensitivity.ConsentOrCertification)
         {
             return State(field, null, FieldResolutionState.NeedsInput,
@@ -16,6 +22,16 @@ public sealed class FieldPolicyEvaluator
         {
             return State(field, proposal, proposal is null ? FieldResolutionState.NeedsInput : FieldResolutionState.NeedsReview,
                 "This control is not safely supported yet.");
+        }
+
+        if (proposal is null &&
+            (field.ControlKind is ApplicationControlKind.SingleChoice or ApplicationControlKind.MultipleChoice) &&
+            field.Options.Count == 0)
+        {
+            return State(field, null, FieldResolutionState.NeedsInput,
+                field.OptionBehavior == FieldOptionBehavior.Searchable
+                    ? "No saved answer matched this searchable field. Select it on the page."
+                    : "Choices could not be loaded safely. Select this field on the page.");
         }
 
         if (proposal is null)
@@ -32,7 +48,7 @@ public sealed class FieldPolicyEvaluator
                 "Review this personal or sensitive answer before filling.");
         }
 
-        if (proposal.Score < 0.90)
+        if (proposal.Score < 0.90 || field.LabelConfidence < 0.90)
         {
             return State(field, proposal, FieldResolutionState.NeedsReview,
                 "Review this suggested answer.");

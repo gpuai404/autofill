@@ -25,8 +25,8 @@ public sealed class ProfileProposalMatcher
         Rule("HighestEducation", p => p.HighestEducation, 0.84, "highest education", "highest degree"),
         Rule("Skills", p => p.Skills, 0.82, "skills", "technical skills"),
         Rule("WorkAuthorizationStatus", p => p.WorkAuthorizationStatus, 0.88, "work authorization", "authorised to work", "authorized to work", "eligible to work"),
-        Rule("RequiresSponsorship", p => p.RequiresSponsorship ? "Yes" : "No", 0.91, "require sponsorship", "need sponsorship", "visa sponsorship"),
-        Rule("WillingToRelocate", p => p.WillingToRelocate ? "Yes" : "No", 0.91, "willing to relocate", "relocation"),
+        Rule("SponsorshipRequirement", p => p.SponsorshipRequirement, 0.91, "require sponsorship", "need sponsorship", "visa sponsorship"),
+        Rule("RelocationPreference", p => p.RelocationPreference, 0.91, "willing to relocate", "relocation"),
         Rule("SalaryExpectation", p => p.SalaryExpectation, 0.82, "salary expectation", "expected compensation", "desired salary"),
         Rule("NoticePeriod", p => p.NoticePeriod, 0.84, "notice period", "available to start", "start date"),
         Rule("PreferredWorkType", p => p.PreferredWorkType, 0.82, "preferred work type", "remote or hybrid", "work arrangement"),
@@ -53,6 +53,10 @@ public sealed class ProfileProposalMatcher
     public FieldProposal? Match(ApplicationFieldDescriptor field, Profile profile, ScanContext context)
     {
         if (field.Sensitivity == FieldSensitivity.ConsentOrCertification)
+        {
+            return null;
+        }
+        if (field.LabelConfidence < 0.70)
         {
             return null;
         }
@@ -92,7 +96,8 @@ public sealed class ProfileProposalMatcher
 
         var selectedOptions = MatchCapturedOptions(field, value);
         if (field.ControlKind is ApplicationControlKind.SingleChoice or ApplicationControlKind.MultipleChoice &&
-            selectedOptions.Count == 0)
+            selectedOptions.Count == 0 &&
+            field.OptionBehavior != FieldOptionBehavior.Searchable)
         {
             return null;
         }
@@ -102,9 +107,10 @@ public sealed class ProfileProposalMatcher
             FieldId = field.FieldId,
             ProfileAttribute = rule.Attribute,
             Value = value,
-            Score = rule.Score,
+            Score = rule.Score * field.LabelConfidence,
             Source = FieldProposalSource.UserProfile,
             Evidence = $"Matched phrase '{matchedTerm}'.",
+            FieldIdentityConfidence = field.LabelConfidence,
             SelectedOptions = selectedOptions
         };
     }
@@ -120,8 +126,12 @@ public sealed class ProfileProposalMatcher
             .ToList();
     }
 
-    private static bool PhraseMatch(string text, string term) =>
-        text.Contains(FieldTextNormalizer.Normalize(term), StringComparison.Ordinal);
+    private static bool PhraseMatch(string text, string term)
+    {
+        var normalizedText = " " + FieldTextNormalizer.Normalize(text) + " ";
+        var normalizedTerm = " " + FieldTextNormalizer.Normalize(term) + " ";
+        return normalizedText.Contains(normalizedTerm, StringComparison.Ordinal);
+    }
 
     private static MatchRule Rule(string attribute, Func<Profile, string?> value, double score, params string[] terms) =>
         new(attribute, value, score, terms, attribute is "FullName" ? ["company", "employer"] : []);

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "siteId": "greenhouse",
+  "profileVersion": 1,
+  "hosts": ["greenhouse.io"],
+  "roots": { "application": [] },
+  "exclude": { "controls": [], "containers": [] },
+  "discovery": { "fieldSelectors": [] },
+  "options": { "localRootSelectors": [], "popupSelectors": [], "optionSelectors": [], "optionIdPrefix": "" },
+  "filling": { "controlRootSelectors": [], "fieldRootSelectors": [], "popupOptionSelectors": [], "openActions": [] }
+}

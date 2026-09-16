@@ -148,12 +148,7 @@
         ? siteRules.options.optionSelectors
         : [];
       const strictSelector = [OPTION_ITEM_SELECTOR].concat(configuredSelectors).join(', ');
-      const hook = siteRules.hooks?.extractOptionElements;
-      const hookElements = typeof hook === 'function'
-        ? hook(root, { allowScopedFallback: Boolean(allowScopedFallback) })
-        : [];
       const strict = collectElementsAcrossRoots(root, strictSelector)
-        .concat(Array.isArray(hookElements) ? hookElements : [])
         .filter(isVisible)
         .filter(option => isOptionText(optionTextFor(option)));
       if (strict.length > 0 || !allowScopedFallback) {

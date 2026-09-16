@@ -100,12 +100,6 @@
       return result(false, selector, value, 'Element not found.');
     }
 
-    const fillControlHook = siteRules.hooks?.fillControl;
-    if (typeof fillControlHook === 'function') {
-      const hookResult = await fillControlHook({ element, selector, value, fillStrategy, dom, optionHandling });
-      if (hookResult !== undefined && hookResult !== null) return hookResult;
-    }
-
     const normalizedValue = optionHandling.normalize(value);
 
     focusElement(element);
@@ -191,6 +185,7 @@
   }
 
   const optionValue = optionHandling.optionValue;
+  const optionLabel = optionHandling.optionLabel;
   const optionSelector = optionHandling.optionSelector;
   const optionFillText = optionHandling.optionFillText;
   const optionSource = optionHandling.optionSource;
@@ -297,6 +292,22 @@
     return true;
   }
 
+  function selectionMatches(element, option, optionElement) {
+    const expected = [optionValue(option), optionLabel(option), optionFillText(option)]
+      .map(optionHandling.normalize)
+      .filter(Boolean);
+    const matches = value => expected.includes(optionHandling.normalize(value));
+    if (matches(element.value) || matches(element.getAttribute('aria-valuetext'))) return true;
+    if (optionElement && (optionElement.getAttribute('aria-selected') === 'true' || optionElement.checked === true)) return true;
+
+    let current = element;
+    for (let depth = 0; current && depth < 4; depth++, current = current.parentElement) {
+      const text = optionHandling.normalize(current.textContent);
+      if (text && expected.some(value => text === value || text.length <= value.length + 24 && text.includes(value))) return true;
+    }
+    return false;
+  }
+
   async function selectByTyping(element, option) {
     const value = optionFillText(option);
     if (!value || element.tagName === 'SELECT') {
@@ -314,7 +325,8 @@
       if (visibleOption) {
         dom.activateElement(visibleOption);
         dom.emitInputEvents(element);
-        return true;
+        await dom.wait(80);
+        return selectionMatches(element, option, visibleOption);
       }
 
       if (visiblePopupOptions().length === 0) {
@@ -356,11 +368,6 @@
     }
 
     const element = dom.resolveScopedSelector(selector);
-    const fillOptionHook = siteRules.hooks?.fillOption;
-    if (element && typeof fillOptionHook === 'function') {
-      const hookResult = await fillOptionHook({ element, selector, option, fillStrategy, dom, optionHandling });
-      if (hookResult !== undefined && hookResult !== null) return hookResult;
-    }
     const capturedOption = capturedOptionSelector ? dom.resolveScopedSelector(capturedOptionSelector) : null;
     if (!element && capturedOption && matchesSelectedOption(capturedOption, option)) {
       if (capturedOption.type === 'checkbox' || capturedOption.type === 'radio') {
@@ -398,8 +405,12 @@
     if (optionToClick) {
       dom.activateElement(optionToClick);
       dom.emitInputEvents(element);
+      await dom.wait(80);
+      const verified = selectionMatches(element, option, optionToClick);
       await dom.clearActiveFocus(element, optionToClick);
-      return result(true, selector, value, 'Captured option clicked.', element);
+      return verified
+        ? result(true, selector, value, 'Captured option selected and verified.', element)
+        : result(false, selector, value, 'Option interaction completed but the selected value could not be verified.', element);
     }
 
     if (element.getAttribute('role') === 'combobox' || element.getAttribute('aria-haspopup')) {

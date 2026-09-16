@@ -20,6 +20,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
     private readonly IJobBrowserStatusService _statusService;
     private readonly IDetectedFieldViewModelMapper _detectedFieldViewModelMapper;
     private readonly IProfileRepository _profileRepository;
+    private readonly IFieldOptionEnrichmentService _optionEnrichmentService;
     
     private string? _lastScanRawResult;
     private WebViewCapabilityResult _lastScanCapability = WebViewCapabilityResult.Unknown;
@@ -30,7 +31,8 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         IJobBrowserWorkflowService workflowService,
         IJobBrowserStatusService statusService,
         IDetectedFieldViewModelMapper detectedFieldViewModelMapper,
-        IProfileRepository profileRepository)
+        IProfileRepository profileRepository,
+        IFieldOptionEnrichmentService optionEnrichmentService)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _webViewBridge = webViewBridge ?? throw new ArgumentNullException(nameof(webViewBridge));
@@ -38,6 +40,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         _statusService = statusService ?? throw new ArgumentNullException(nameof(statusService));
         _detectedFieldViewModelMapper = detectedFieldViewModelMapper ?? throw new ArgumentNullException(nameof(detectedFieldViewModelMapper));
         _profileRepository = profileRepository ?? throw new ArgumentNullException(nameof(profileRepository));
+        _optionEnrichmentService = optionEnrichmentService ?? throw new ArgumentNullException(nameof(optionEnrichmentService));
     }
 
     public async Task ScanAsync(string pageUrl)
@@ -57,10 +60,11 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
                 return;
             }
 
+            var enrichment = await _optionEnrichmentService.EnrichAsync(_webViewBridge, scanResult.Fields);
             var preparedFields = await _workflowService.PrepareDetectedFieldsAsync(
                 pageUrl,
                 await _webViewBridge.GetCurrentPageLanguageAsync(),
-                scanResult.Fields,
+                enrichment.Fields,
                 _lastScanCapability,
                 profile);
             _viewModel.ReplaceDetectedFields(preparedFields);
@@ -147,7 +151,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         }
     }
 
-    public async Task ApproveFieldAsync(DetectedFieldViewModel field)
+    public async Task ConfirmFieldAsync(DetectedFieldViewModel field)
     {
         try
         {
@@ -157,9 +161,22 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         }
         catch (Exception ex)
         {
-            _viewModel.SetStatus($"Approve failed: {FirstLine(ex.ToString())}");
+            _viewModel.SetStatus($"Confirmation failed: {FirstLine(ex.ToString())}");
             throw;
         }
+    }
+
+    public async Task UseFieldAnswerAsync(DetectedFieldViewModel field)
+    {
+        field.UseDraftValue();
+        if (!field.CanAutoFill)
+        {
+            _viewModel.SetStatus($"Enter an answer for {field.Label}.");
+            return;
+        }
+
+        await _webViewBridge.FocusFieldAsync(_detectedFieldViewModelMapper.ToDomainModel(field));
+        _viewModel.SetStatus($"Answer saved for {field.Label}. Ready to fill.");
     }
 
     public async Task FocusFieldAsync(DetectedFieldViewModel field)
@@ -174,7 +191,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
                 return;
             }
 
-            _viewModel.SetStatus(field.CanApprove
+            _viewModel.SetStatus(field.CanConfirm
                 ? $"Focused {field.Label}. Confirm the suggestion before filling."
                 : field.IsManual
                     ? $"Focused {field.Label}. Complete this field manually."
@@ -235,7 +252,7 @@ public sealed class JobBrowserPageService : IJobBrowserPageService
         }
         catch (Exception ex)
         {
-            _viewModel.SetStatus($"Option approval failed: {FirstLine(ex.ToString())}");
+            _viewModel.SetStatus($"Option selection failed: {FirstLine(ex.ToString())}");
             throw;
         }
     }

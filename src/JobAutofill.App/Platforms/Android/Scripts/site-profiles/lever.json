@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "siteId": "lever",
+  "profileVersion": 1,
+  "hosts": ["lever.co"],
+  "roots": { "application": [] },
+  "exclude": { "controls": [], "containers": [] },
+  "discovery": { "fieldSelectors": [] },
+  "options": { "localRootSelectors": [], "popupSelectors": [], "optionSelectors": [], "optionIdPrefix": "" },
+  "filling": { "controlRootSelectors": [], "fieldRootSelectors": [], "popupOptionSelectors": [], "openActions": [] }
+}

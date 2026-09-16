@@ -203,6 +203,7 @@
     return controlClassification.buildFieldModel({
       selector: selectorFor(root),
       label: fieldLabel,
+      labelEvidence: { text: fieldLabel, source: 'choice-group-question', confidence: fieldLabel ? 0.88 : 0 },
       facts,
       controlInfo,
       sensitiveInfo,
@@ -849,7 +850,10 @@
           continue;
         }
 
-        const fieldLabel = labelDiscovery.labelFor(element);
+        const labelEvidence = typeof labelDiscovery.labelEvidenceFor === 'function'
+          ? labelDiscovery.labelEvidenceFor(element)
+          : { text: labelDiscovery.labelFor(element), source: 'legacy', confidence: 0.5 };
+        const fieldLabel = labelEvidence.text;
         const fieldMessage = fieldMessageFor(element, fieldLabel);
         const controlInfo = controlClassification.controlInfoFor(element, fieldLabel, factsFor);
         if (!fieldLabel && controlInfo.controlType === 'checkboxBoolean') {
@@ -910,6 +914,7 @@
         window.__scanDebug.activeField = {
           selector: fieldSelector,
           label: fieldLabel,
+          labelEvidence,
           fieldMessage: fieldMessage,
           controlType: controlInfo.controlType,
           optionSourceGroup: controlInfo.optionSourceGroup
@@ -936,6 +941,7 @@
         fields.push(controlClassification.buildFieldModel({
           selector: fieldSelector,
           label: fieldLabel,
+          labelEvidence,
           fieldMessage: fieldMessage,
           facts: controlInfo.facts,
           controlInfo,

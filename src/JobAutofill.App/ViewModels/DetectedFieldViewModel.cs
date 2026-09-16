@@ -7,10 +7,12 @@ namespace JobAutofill.App.ViewModels;
 public sealed class DetectedFieldViewModel : INotifyPropertyChanged
 {
     private ApplicationFieldState _state;
+    private string _draftValue = string.Empty;
 
     public DetectedFieldViewModel(ApplicationFieldState state)
     {
         _state = state;
+        _draftValue = state.Proposal?.Value ?? string.Empty;
         Options = state.Field.Options.Select(option => new DetectedFieldOptionViewModel
         {
             Value = option.Value,
@@ -36,13 +38,30 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
     public bool HasMatchedOptions => MatchedOptions.Count > 0;
     public bool IsMultipleSelection => _state.Field.ControlKind == ApplicationControlKind.MultipleChoice;
     public bool CanAutoFill => _state.IsReadyToFill;
-    public bool CanApprove => _state.Resolution == FieldResolutionState.NeedsReview;
+    public bool CanConfirm => _state.Resolution == FieldResolutionState.NeedsReview;
     public bool NeedsAttention => _state.Resolution is FieldResolutionState.NeedsInput or FieldResolutionState.NeedsReview;
     public bool IsManual => _state.Field.FillCapability is FieldFillCapability.Manual or FieldFillCapability.Unsupported;
     public bool IsCompleted => _state.Execution == FieldExecutionState.Filled;
+    public bool CanEnterValue => _state.Resolution == FieldResolutionState.NeedsInput &&
+        _state.Field.FillCapability == FieldFillCapability.Automatic &&
+        _state.Field.ControlKind is ApplicationControlKind.Text or
+            ApplicationControlKind.Number or
+            ApplicationControlKind.Date;
+    public string DraftValue
+    {
+        get => _draftValue;
+        set
+        {
+            if (string.Equals(_draftValue, value, StringComparison.Ordinal)) return;
+            _draftValue = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanUseDraftValue));
+        }
+    }
+    public bool CanUseDraftValue => CanEnterValue && !string.IsNullOrWhiteSpace(DraftValue);
     public string? ValueToFill => _state.Proposal?.Value;
     public string ReviewReason => _state.Message;
-    public string ApprovalActionText => "Confirm";
+    public string ConfirmationActionText => "Confirm";
     public string DisplayTypeText => _state.Field.ControlKind switch
     {
         ApplicationControlKind.SingleChoice => "choice",
@@ -72,6 +91,29 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
         NotifyStateChanged();
     }
 
+    public void UseDraftValue()
+    {
+        var value = DraftValue.Trim();
+        if (!CanEnterValue || value.Length == 0) return;
+
+        _state = _state with
+        {
+            Proposal = new FieldProposal
+            {
+                FieldId = _state.Field.FieldId,
+                ProfileAttribute = "UserAnswer",
+                Value = value,
+                Score = 1,
+                Source = FieldProposalSource.User,
+                Evidence = "Entered by user.",
+                FieldIdentityConfidence = _state.Field.LabelConfidence
+            },
+            Resolution = FieldResolutionState.Resolved,
+            Message = "Ready to fill."
+        };
+        NotifyStateChanged();
+    }
+
     public void SelectOption(DetectedFieldOptionViewModel option)
     {
         if (IsMultipleSelection)
@@ -92,6 +134,7 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
             Score = 1,
             Source = FieldProposalSource.User,
             Evidence = "Selected by user.",
+            FieldIdentityConfidence = _state.Field.LabelConfidence,
             SelectedOptions = MatchedOptions.Select(selected => new SelectedFieldOption
             {
                 Value = selected.Value,
@@ -125,10 +168,13 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
         _state.Field.FieldId,
         _state.Field.ScanId,
         Label,
+        _state.Field.LabelSource,
+        _state.Field.LabelConfidence,
         Selector,
         _state.Field.ControlKind,
         _state.Field.Requirement,
         _state.Field.FillCapability,
+        _state.Field.OptionBehavior,
         _state.Field.Sensitivity,
         _state.Resolution,
         _state.Execution,
@@ -143,10 +189,12 @@ public sealed class DetectedFieldViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(MatchedOptions));
         OnPropertyChanged(nameof(HasMatchedOptions));
         OnPropertyChanged(nameof(CanAutoFill));
-        OnPropertyChanged(nameof(CanApprove));
+        OnPropertyChanged(nameof(CanConfirm));
         OnPropertyChanged(nameof(NeedsAttention));
         OnPropertyChanged(nameof(IsManual));
         OnPropertyChanged(nameof(IsCompleted));
+        OnPropertyChanged(nameof(CanEnterValue));
+        OnPropertyChanged(nameof(CanUseDraftValue));
         OnPropertyChanged(nameof(ValueToFill));
         OnPropertyChanged(nameof(ReviewReason));
         OnPropertyChanged(nameof(FillPreview));
